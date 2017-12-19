@@ -1,9 +1,14 @@
-parameter rmd.
+//Script for launching and landing rockets
+//Landing code only works with laser distance mod
+//rmd is runmode, tH is target heading, tAP and tPE are
+//target apoapsis and periapsis respectively.
+
+parameter rmd is 1.	//{1,2,3,4,5} Launch modes {6,7,8,9} Landing modes
 parameter tH is 90.
 parameter tAP is 80000.
 parameter tPE is 80000.
 
-declare function engine_flameout {
+declare function engine_flameout {	//Used to determine when to stage
 	list engines in engs.
 
 	for e in engs {
@@ -21,15 +26,15 @@ RCS off.
 set runmode to rmd.
 set targetAP to tAP.
 set targetPE to tPE.
-lock actalt to -alt:radar.
-lock g to orbit:body:mu / (ship:altitude + orbit:body:radius)^2.
-lock twr to ship:availablethrust / (ship:mass * g).
-lock normalvo to vcrs(ship:velocity:orbit:normalized,up:vector).
-lock normalvs to vcrs(ship:velocity:surface:normalized,up:vector).
-lock horizo to vcrs(up:vector,normalvo).
-lock horizs to vcrs(up:vector,normalvs).
-set fueltrig to true.
-set tval to 0.
+lock g to orbit:body:mu / (ship:altitude + orbit:body:radius)^2. //Acceleration due to gravity of
+																//current SOI body at current altitude
+lock twr to ship:availablethrust / (ship:mass * g).	//Thrust to weight ratio
+lock normalvo to vcrs(ship:velocity:orbit:normalized,up:vector).	//Normal vector to orbital trajectory
+lock normalvs to vcrs(ship:velocity:surface:normalized,up:vector).	//Normal vector to surface trajectory
+lock horizo to vcrs(up:vector,normalvo).	//Horizan vector in orbit prograde and UP:vector plane
+lock horizs to vcrs(up:vector,normalvs).	//Horizan vector in surface prograde and UP:vector plane
+set fueltrig to true.	//Is there non zero amount of solid or liquid fuel remaining on the ship?
+set tval to 0.	//Thrust value [0, 1]
 if ship:modulesnamed("LaserDistModule"):length > 0 {
 	set laser_mod to ship:modulesnamed("LaserDistModule")[0].
 }
@@ -235,7 +240,6 @@ until runmode = 0 {
 		set tval to 0.
 		unlock steering.
 		unlock throttle.
-		unlock actalt.
 		unlock g.
 		unlock twr.
 		unlock normalvo.
