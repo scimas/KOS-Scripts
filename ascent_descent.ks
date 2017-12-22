@@ -4,9 +4,9 @@
 //target apoapsis and periapsis respectively.
 
 parameter rmd is 1.	//{1,2,3,4,5} Launch modes {6,7,8,9} Landing modes
-parameter tH is 90.
 parameter tAP is 80000.
 parameter tPE is 80000.
+parameter tH is 90.
 
 declare function engine_flameout {	//Used to determine when to stage
 	list engines in engs.
