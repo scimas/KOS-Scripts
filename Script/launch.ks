@@ -97,7 +97,7 @@ function circularize {
     local isp is SHIP:AVAILABLETHRUST / massBurnRate.
     
     local burnTime is SHIP:MASS * (1 - CONSTANT:E ^ (-dV / isp)) / massBurnRate.
-    local coastTime is TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.4.
+    local coastTime is TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.45.
     
     print "Burn time is " + burnTime + "s".
 
