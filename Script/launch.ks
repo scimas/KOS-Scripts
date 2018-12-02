@@ -13,6 +13,13 @@ local engineList is LIST().
 LIST ENGINES in engineList.
 
 when stageControl = true and STAGE:NUMBER > 0 then {
+    for e in engineList {
+        if e:FLAMEOUT {
+            STAGE.
+            wait until STAGE:READY.
+            BREAK
+        }
+    }
     until SHIP:AVAILABLETHRUST <> 0 AND engineList:LENGTH > 0 {
         STAGE.
         wait until STAGE:READY.
