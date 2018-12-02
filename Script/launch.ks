@@ -8,25 +8,34 @@ parameter targetHeading is 90.
 parameter turnStartSpeed is 80.
 parameter profile is 0.
 
-local stageControl is false.
+local stageControl is FALSE.
 local engineList is LIST().
 LIST ENGINES in engineList.
 
-when stageControl = true and STAGE:NUMBER > 0 then {
+when stageControl = TRUE and STAGE:NUMBER > 0 then {
     for e in engineList {
         if e:FLAMEOUT {
             STAGE.
             wait until STAGE:READY.
+            LIST ENGINES in engineList.
             BREAK
         }
     }
+
     until SHIP:AVAILABLETHRUST <> 0 AND engineList:LENGTH > 0 {
         STAGE.
         wait until STAGE:READY.
         LIST ENGINES in engineList.
     }
-    if engineList:LENGTH > 0 {
-        return true.
+    
+    if STAGE:NUMBER = 0 {
+        return FALSE.
+    }
+    else if engineList:LENGTH = 0 {
+        return FALSE.
+    }
+    else {
+        return TRUE.
     }
 }
 
@@ -101,7 +110,7 @@ function circularize {
     lock THROTTLE to 0.
 }
 
-set stageControl to true.
+set stageControl to TRUE.
 if SHIP:AVAILABLETHRUST = 0 {
     STAGE.
 }
@@ -122,7 +131,7 @@ print "Waiting for circularization burn".
 circularize(targetAltitude).
 print "Orbit achieved".
 
-set stageControl to false.
+set stageControl to FALSE.
 lock THROTTLE to 0.
 unlock STEERING.
 unlock THROTTLE.
