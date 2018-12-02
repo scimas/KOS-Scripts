@@ -5,7 +5,7 @@
 
 parameter targetAltitude is 80000.
 parameter targetHeading is 90.
-parameter turnStartSpeed is 80.
+parameter turnStartSpeed is 100.
 parameter profile is 0.
 
 local stageControl is FALSE.
