@@ -18,7 +18,7 @@ when stageControl = TRUE and STAGE:NUMBER > 0 then {
             STAGE.
             wait until STAGE:READY.
             LIST ENGINES in engineList.
-            BREAK
+            BREAK.
         }
     }
 
