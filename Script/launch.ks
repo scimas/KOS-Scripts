@@ -13,23 +13,20 @@ local engineList is LIST().
 LIST ENGINES in engineList.
 
 when stageControl = true and STAGE:NUMBER > 0 then {
-    for e in engineList {
-        if e:FLAMEOUT {
-            print "Engine flameout detected in stage " + STAGE:NUMBER.
-            print "Staging".
-            STAGE.
-            wait until STAGE:READY.
-            LIST ENGINES in engineList.
-            BREAK.
-        }
+    until SHIP:AVAILABLETHRUST <> 0 AND engineList:LENGTH > 0 {
+        STAGE.
+        wait until STAGE:READY.
+        LIST ENGINES in engineList.
     }
-    PRESERVE.
+    if engineList:LENGTH > 0 {
+        return true.
+    }
 }
 
 function verticalAscent {
     parameter turnStartSpeed is 80.
 
-    lock STEERING to HEADING(90, 90).
+    lock STEERING to HEADING(targetHeading, 90).
     lock THROTTLE to 1.
 
     wait until SHIP:VELOCITY:SURFACE:MAG > turnStartSpeed.
@@ -70,7 +67,7 @@ function circularize {
 
     local dV is targetSpeed - currentSpeed.
 
-    print dV + " m/s required for orbit.".
+    print dV + " m/s required for orbit".
 
     local burnEngines is LIST().
     LIST ENGINES in burnEngines.
@@ -84,20 +81,16 @@ function circularize {
     local isp is SHIP:AVAILABLETHRUST / massBurnRate.
     
     local burnTime is SHIP:MASS * (1 - CONSTANT:E ^ (-dV / isp)) / massBurnRate.
-    local coastTime is TIME:SECONDS + ETA:APOAPSIS - burnTime/3.
+    local coastTime is TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.4.
     
-    print "Burn time is " + burnTime.
+    print "Burn time is " + burnTime + "s".
 
     lock STEERING to SHIP:VELOCITY:ORBIT.
     wait until TIME:SECONDS > coastTime.
-
     lock THROTTLE to 1.
+    
     local burnStartTime is TIME:SECONDS.
-    wait until TIME:SECONDS > burnStartTime + burnTime - 1.
-
-    lock THROTTLE to 0.1.
-    wait until SHIP:PERIAPSIS > targetAltitude.
-
+    wait until TIME:SECONDS > burnStartTime + burnTime.
     lock THROTTLE to 0.
 }
 
@@ -106,24 +99,25 @@ if SHIP:AVAILABLETHRUST = 0 {
     STAGE.
 }
 
-print "Starting vertical ascent.".
+print "Starting vertical ascent".
 verticalAscent(turnStartSpeed).
-print "Vertical ascent complete.".
+print "Vertical ascent complete".
 
-print "Starting gravity turn.".
+print "Starting gravity turn".
 gravityTurn(targetAltitude, targetHeading, profile).
-print "Gravity turn complete.".
+print "Gravity turn complete".
 
-print "Coasting to atmosphere exit, if it exists.".
+print "Coasting to atmosphere exit, if it exists".
 atmosphereExit().
-print "Out of atmosphere.".
+print "Out of atmosphere".
 
-print "Waiting for circularization burn.".
+print "Waiting for circularization burn".
 circularize(targetAltitude).
-print "Orbit achieved.".
+print "Orbit achieved".
 
+set stageControl to false.
 lock THROTTLE to 0.
 unlock STEERING.
 unlock THROTTLE.
 
-print "Launch complete.".
+print "Launch complete".
