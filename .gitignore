@@ -1,1 +1,2 @@
-boot/
+boot/*
+!/boot/bootfile.ks
