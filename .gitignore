@@ -1,2 +1,2 @@
-boot/*
-!/boot/bootfile.ks
+Script/boot/*
+!Script/boot/bootfile.ks
