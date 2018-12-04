@@ -13,10 +13,10 @@ local updatefile is "0:/boot/update_" + SHIP:NAME + ".ks".
 
 if EXISTS(updatefile) {
     COPYPATH(updatefile, "update.ks").
+    DELETEPATH(updatefile).
     print "Found update file".
     print "Running new instructions".
     RUNPATH("update.ks").
-    DELETEPATH(updatefile).
     print "New instructions executed, exiting".
 }
 else {
