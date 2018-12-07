@@ -4,10 +4,11 @@ RUNONCEPATH("manoeuvre.ks").
 
 function launch {
     parameter targetAltitude is 80000.
-    parameter targetHeading is 90.
+    parameter targetInclination is 0.
     parameter turnStartSpeed is 100.
     parameter profile is 0.
 
+    local targetHeading is arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
     local stageControl is FALSE.
     local engineList is LIST().
     LIST ENGINES in engineList.
