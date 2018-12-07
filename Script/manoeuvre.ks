@@ -66,14 +66,14 @@ function manoeuvre {
         set manNode:ETA to burnStart.
     }
     else if position = "AP" {
-        set coastTime to TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.45 - 15.
-        set burnStartTime to TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.45.
+        set coastTime to TIME:SECONDS + ETA:APOAPSIS - burnTime / 2 - 15.
+        set burnStartTime to TIME:SECONDS + ETA:APOAPSIS - burnTime / 2.
         set burnStopTime to burnStartTime + burnTime.
         set manNode:ETA to ETA:APOAPSIS.
     }
     else if position = "PE" {
-        set coastTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime * 0.45 - 15.
-        set burnStartTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime * 0.45.
+        set coastTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime / 2 - 15.
+        set burnStartTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime / 2.
         set burnStopTime to burnStartTime + burnTime.
         set manNode:ETA to ETA:PERIAPSIS.
     }
