@@ -7,7 +7,7 @@ wait until SHIP:UNPACKED AND SHIP:LOADED.
 wait 2.
 
 global lock orbitTangent to SHIP:VELOCITY:ORBIT:NORMALIZED.
-global lock orbitBinormal to VCRS(BODY:POSITION, orbitTangent):NORMALIZED.
+global lock orbitBinormal to VCRS(-BODY:POSITION, orbitTangent):NORMALIZED.
 global lock orbitNormal to VCRS(orbitTangent, orbitBinormal):NORMALIZED.
 
 global lock surfaceTanget to SHIP:VELOCITY:surface:NORMALIZED.
