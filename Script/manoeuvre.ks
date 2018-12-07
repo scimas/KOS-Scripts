@@ -2,17 +2,8 @@
 //a time in future or a position like Ap, Pe, and
 //a frame - orbit or surface
 
-@lazyglobal off.
-
-parameter dV_tangent is 0.
-parameter dV_normal is 0.
-parameter dV_binormal is 0.
-parameter burnStart is 0.
-parameter position is "NONE".
-parameter frame is "ORBIT".
-
 function getBurnTime {
-    parameter dV.
+    parameter deltaV.
     
     local burnEngines is LIST().
     LIST ENGINES in burnEngines.
@@ -25,59 +16,80 @@ function getBurnTime {
     }
     local isp is SHIP:AVAILABLETHRUST / massBurnRate.
     
-    local burnTime is SHIP:MASS * (1 - CONSTANT:E ^ (-dV / isp)) / massBurnRate.
+    local burnTime is SHIP:MASS * (1 - CONSTANT:E ^ (-deltaV / isp)) / massBurnRate.
     return burnTime.
 }
 
-local dir_tangent is V(0, 0, 0).
-local dir_normal is V(0, 0, 0).
-local dir_binormal is V(0, 0, 0).
-local dV is V(0, 0, 0).
+function exec {
+    parameter coastTime.
+    parameter burnStartTime.
+    parameter burnStopTime.
+    parameter manNode.
 
-if frame = "ORBIT" {
-    lock dir_tangent to SHIP:VELOCITY:ORBIT:NORMALIZED.
-}
-else if frame = "SURFACE" {
-    lock dir_tangent to SHIP:VELOCITY:SURFACE:NORMALIZED.
-}
+    lock STEERING to manNode:DELTAV.
+    WARPTO(coastTime).
+    wait until TIME:SECONDS > burnStartTime.
 
-lock dir_binormal to VCRS(BODY:POSITION, dir_tangent):NORMALIZED.
-lock dir_normal to VCRS(dir_tangent, dir_binormal):NORMALIZED.
+    lock THROTTLE to 1.
+    wait until manNode:DELTAV:MAG < 1.
 
-lock dV to (dV_tangent * dir_tangent) + (dV_normal * dir_normal) + (dV_binormal * dir_binormal).
-lock STEERING to dV.
+    lock THROTTLE to 0.
+    unlock STEERING.
+    unlock THROTTLE.
 
-local burnTime is getBurnTime(dV:MAG).
-local coastTime is 0.
-local burnStartTime is 0.
-local burnStopTime is 0.
-
-print "Burn time is " + burnTime + " s".
-
-if burnStart <> 0 {
-    set coastTime to TIME:SECONDS + MAX(burnStart - 15, 0).
-    set burnStartTime to TIME:SECONDS + burnStart.
-    set burnStopTime to burnStartTime + burnTime.
-}
-else if position = "Ap" {
-    set coastTime to TIME:SECONDS + MAX(ETA:APOAPSIS - burnTime * 0.45 - 15, 0).
-    set burnStartTime to TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.45.
-    set burnStopTime to burnStartTime + burnTime.
-}
-else if position = "Pe" {
-    set coastTime to TIME:SECONDS + MAX(ETA:PERIAPSIS - burnTime * 0.45 - 15, 0).
-    set burnStartTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime * 0.45.
-    set burnStopTime to burnStartTime + burnTime.
-}
-else {
-    print "Invalid position argument".
-    return.
+    print "Manoeuvre executed".
 }
 
-TIMEWARP:WARPTO(coastTime).
-wait until TIME:SECONDS > burnStartTime.
+function manoeuvre {
+    parameter dV_tangent is 0.
+    parameter dV_normal is 0.
+    parameter dV_binormal is 0.
+    parameter burnStart is 0.
+    parameter position is "NONE".
+    parameter frame is "ORBIT".
 
-LOCK THROTTLE to 1.
-wait until TIME:SECONDS > burnStopTime.
+    local manNode is NODE(TIME:SECONDS + 1, dV_normal, dV_binormal, dV_tangent).
+    
+    local requiredDeltaV is V(dV_tangent, dV_normal, dV_binormal):MAG.
+    local burnTime is getBurnTime(requiredDeltaV).
+    local coastTime is 0.
+    local burnStartTime is 0.
+    local burnStopTime is 0.
 
-print "Manoeuvre executed".
+    print "Burn time is " + burnTime + " s".
+    local okayToBurn is true.
+
+    if burnStart <> 0 {
+        set coastTime to TIME:SECONDS + MAX(burnStart - 15, 0).
+        set burnStartTime to TIME:SECONDS + burnStart.
+        set burnStopTime to burnStartTime + burnTime.
+        set manNode:ETA to burnStart.
+    }
+    else if position = "AP" {
+        set coastTime to TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.45 - 15.
+        set burnStartTime to TIME:SECONDS + ETA:APOAPSIS - burnTime * 0.45.
+        set burnStopTime to burnStartTime + burnTime.
+        set manNode:ETA to ETA:APOAPSIS.
+    }
+    else if position = "PE" {
+        set coastTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime * 0.45 - 15.
+        set burnStartTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime * 0.45.
+        set burnStopTime to burnStartTime + burnTime.
+        set manNode:ETA to ETA:PERIAPSIS.
+    }
+    else {
+        print "Invalid position argument".
+        set okayToBurn to false.
+    }
+
+    if okayToBurn {
+        ADD manNode.
+        lock STEERING to manNode:DELTAV.
+        exec(coastTime, burnStartTime, burnStopTime, manNode).
+        REMOVE manNode.
+    }
+    else {
+        print "One or more arguments were invalid".
+        print "Exiting without executing manoeuvre".
+    }
+}
