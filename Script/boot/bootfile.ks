@@ -19,8 +19,10 @@ wait until ADDONS:RT:HASKSCCONNECTION(SHIP).
 CORE:DOACTION("open terminal", true).
 COPYPATH("0:/launch.ks", "").
 COPYPATH("0:/manoeuvre.ks", "").
+COPYPATH("0:/functions.ks", "").
 RUNONCEPATH("manoeuvre.ks").
 RUNONCEPATH("launch.ks").
+RUNONCEPATH("functions.ks").
 
 local updatefile is "0:/boot/update_" + SHIP:NAME + ".ks".
 
