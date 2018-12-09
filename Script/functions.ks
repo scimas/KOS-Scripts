@@ -38,9 +38,9 @@ function raisePeriapsis {
 }
 
 function isAtBodyAscendingNode {
-    return ROUND(MOD(ORBIT:LAN - BODY:ROTATIONANGLE - SHIP:LONGITUDE, 360), 0) = 0.
+    return ROUND(MOD(ORBIT:LAN - BODY:ROTATIONANGLE - SHIP:LONGITUDE, 360), 0) = 0 AND ROUND(SHIP:LATITUDE, 0) = 0.
 }
 
 function isAtBodyDescendingNode {
-    return ROUND(MOD(ORBIT:LAN - BODY:ROTATIONANGLE - SHIP:LONGITUDE, 360), 180) = 0.
+    return ROUND(MOD(ORBIT:LAN - BODY:ROTATIONANGLE - SHIP:LONGITUDE, 360), 180) = 0 AND ROUND(SHIP:LATITUDE, 0) = 0.
 }

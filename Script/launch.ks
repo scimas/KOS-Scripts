@@ -8,7 +8,10 @@ function launch {
     parameter turnStartSpeed is 100.
     parameter profile is 0.
 
-    local targetHeading is arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
+    local targetHeading is 90.
+    if ABS(targetInclination) >= ABS(SHIP:LATITUDE) {
+        set targetHeading to arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
+    }
     local stageControl is FALSE.
     local engineList is LIST().
     LIST ENGINES in engineList.
