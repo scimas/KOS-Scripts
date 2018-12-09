@@ -5,12 +5,28 @@ RUNONCEPATH("manoeuvre.ks").
 function launch {
     parameter targetAltitude is 80000.
     parameter targetInclination is 0.
+    parameter targetLAN is MOD(ORBIT:LAN + 90, 360).
     parameter turnStartSpeed is 100.
     parameter profile is 0.
 
+    wait until ROUND(MOD(ORBIT:LAN - targetLAN + 360, 360), 0) = 90 OR ROUND(MOD(ORBIT:LAN - targetLAN - 180 + 360, 360), 0) = 90.
     local targetHeading is 90.
     if ABS(targetInclination) >= ABS(SHIP:LATITUDE) {
-        set targetHeading to arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
+        if targetInclination <= 90 {
+            set targetHeading to arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
+        }
+        else if targetInclination <= 180 {
+            set targetHeading to arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)) + 360.
+        }
+        else {
+            set targetHeading to arcsin(cos(targetInclination - 180) / cos(SHIP:LATITUDE)) + 180.
+        }
+    }
+    else {
+        set targetHeading to SHIP:LATITUDE.
+    }
+    if targetInclination > 180 {
+
     }
     local stageControl is FALSE.
     local engineList is LIST().
