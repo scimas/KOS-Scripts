@@ -10,6 +10,7 @@ function launch {
     parameter profile is 0.
 
     wait until ROUND(MOD(ORBIT:LAN - targetLAN + 360, 360), 0) = 90 OR ROUND(MOD(ORBIT:LAN - targetLAN - 180 + 360, 360), 0) = 90.
+    set WARP to 0.
     local targetHeading is 90.
     if ABS(targetInclination) >= ABS(SHIP:LATITUDE) {
         if targetInclination <= 90 {
