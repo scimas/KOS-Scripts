@@ -24,7 +24,7 @@ RUNONCEPATH("manoeuvre.ks").
 RUNONCEPATH("launch.ks").
 RUNONCEPATH("functions.ks").
 
-local updatefile is "0:/boot/update_" + SHIP:NAME + CORE:TAG + ".ks".
+local updatefile is "0:/boot/update_" + SHIP:NAME + "_" + CORE:TAG + ".ks".
 
 if EXISTS(updatefile) {
     COPYPATH(updatefile, "update.ks").
