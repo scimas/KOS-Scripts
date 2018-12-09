@@ -9,9 +9,11 @@ function launch {
     parameter turnStartSpeed is 100.
     parameter profile is 0.
 
+    print "Waiting for launch window".
     wait until ROUND(MOD(ORBIT:LAN - targetLAN + 360, 360), 0) = 90 OR ROUND(MOD(ORBIT:LAN - targetLAN - 180 + 360, 360), 0) = 90.
     set WARP to 0.
     wait until kuniverse:TimeWarp:RATE = 1.
+    print "Launching now".
     
     local targetHeading is 90.
     if ABS(targetInclination) >= ABS(SHIP:LATITUDE) {
