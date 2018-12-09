@@ -10,9 +10,9 @@ global lock orbitTangent to SHIP:VELOCITY:ORBIT:NORMALIZED.
 global lock orbitBinormal to VCRS(SHIP:BODY:POSITION, orbitTangent):NORMALIZED.
 global lock orbitNormal to VCRS(orbitTangent, orbitBinormal):NORMALIZED.
 
-global lock surfaceTanget to SHIP:VELOCITY:surface:NORMALIZED.
-global lock surfaceBinormal to VCRS(SHIP:BODY:POSITION, surfaceTanget):NORMALIZED.
-global lock surfaceNormal to VCRS(orbitTangent, surfaceBinormal):NORMALIZED.
+global lock surfaceTangent to SHIP:VELOCITY:surface:NORMALIZED.
+global lock surfaceBinormal to VCRS(SHIP:BODY:POSITION, surfaceTangent):NORMALIZED.
+global lock surfaceNormal to VCRS(surfaceTangent, surfaceBinormal):NORMALIZED.
 
 wait until ADDONS:RT:HASKSCCONNECTION(SHIP).
 
@@ -24,7 +24,7 @@ RUNONCEPATH("manoeuvre.ks").
 RUNONCEPATH("launch.ks").
 RUNONCEPATH("functions.ks").
 
-local updatefile is "0:/boot/update_" + SHIP:NAME + ".ks".
+local updatefile is "0:/boot/update_" + SHIP:NAME + CORE:TAG + ".ks".
 
 if EXISTS(updatefile) {
     COPYPATH(updatefile, "update.ks").
