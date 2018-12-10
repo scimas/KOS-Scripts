@@ -1,6 +1,7 @@
 //Script to execute manoeuvres given a delta V vector and
 //a time in future or a position like Ap, Pe, and
 //a frame - orbit or surface
+RUNONCEPATH("utilities.ks").
 
 function getBurnTime {
     parameter deltaV.
@@ -46,7 +47,7 @@ function manoeuvre {
     parameter dV_binormal is 0.
     parameter burnStart is 0.
     parameter position is "NONE".
-    parameter frame is "ORBIT".
+//    parameter frame is "ORBIT".
 
     local manNode is NODE(TIME:SECONDS + 1, dV_normal, dV_binormal, dV_tangent).
     

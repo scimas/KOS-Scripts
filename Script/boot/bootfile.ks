@@ -20,6 +20,8 @@ CORE:DOACTION("open terminal", true).
 COPYPATH("0:/launch.ks", "").
 COPYPATH("0:/manoeuvre.ks", "").
 COPYPATH("0:/functions.ks", "").
+COPYPATH("0:/utilities.ks", "").
+RUNONCEPATH("utilities.ks").
 RUNONCEPATH("manoeuvre.ks").
 RUNONCEPATH("launch.ks").
 RUNONCEPATH("functions.ks").
