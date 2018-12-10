@@ -32,9 +32,11 @@ function launch {
     else {
         set targetHeading to SHIP:LATITUDE.
     }
-    if targetInclination > 180 {
+    local vOrbit is sqrt(BODY:MU / (targetAltitude + BODY:RADIUS)).
+    local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
+    local vRotY is vOrbit * cos(targetHeading).
+    set targetHeading to arctan(vRotX / vRotY).
 
-    }
     local stageControl is FALSE.
     local engineList is LIST().
     LIST ENGINES in engineList.
