@@ -1,5 +1,6 @@
 //Script for launching a rocket
 //For now, doesn't support launching to a target
+RUNONCEPATH("utilities.ks").
 RUNONCEPATH("manoeuvre.ks").
 
 function launch {
@@ -10,11 +11,12 @@ function launch {
     parameter profile is 0.
 
     print "Waiting for launch window".
-    wait until ROUND(MOD(ORBIT:LAN - targetLAN + 360, 360), 0) = 90 OR ROUND(MOD(ORBIT:LAN - targetLAN - 180 + 360, 360), 0) = 90.
-    set WARP to 0.
-    wait until kuniverse:TimeWarp:RATE = 1.
+    wait until ROUND(MOD(ORBIT:LAN - targetLAN + 360, 360), 0) = 90 OR
+               ROUND(MOD(ORBIT:LAN - targetLAN - 180 + 360, 360), 0) = 90.
+    cancelWarp().
+    wait 2.
     print "Launching now".
-    
+
     local targetHeading is 90.
     if ABS(targetInclination) >= ABS(SHIP:LATITUDE) {
         if targetInclination <= 90 {
@@ -109,7 +111,7 @@ function launch {
         local dV is targetSpeed - currentSpeed.
 
         print dV + " m/s required for orbit".
-        manoeuvre(dV, 0, 0, 0, "AP", "ORBIT").
+        manoeuvre(dV, 0, 0, 0, "AP").
     }
 
     set stageControl to TRUE.
