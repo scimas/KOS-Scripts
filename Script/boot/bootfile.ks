@@ -32,6 +32,7 @@ if EXISTS(updatefile) {
     print "Running new instructions".
     RUNPATH("update.ks").
     print "New instructions executed, exiting".
+    DELETEPATH("update.ks").
 }
 else {
     print "No new instructions found".
