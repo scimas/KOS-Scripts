@@ -1,7 +1,6 @@
 //Script to execute manoeuvres given a delta V vector and
 //a time in future or a position like Ap, Pe, and
 //a frame - orbit or surface
-RUNONCEPATH("utilities.ks").
 
 function getBurnTime {
     parameter deltaV.

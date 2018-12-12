@@ -17,16 +17,13 @@ global lock surfaceNormal to VCRS(surfaceTangent, surfaceBinormal):NORMALIZED.
 wait until ADDONS:RT:HASKSCCONNECTION(SHIP).
 
 CORE:DOACTION("open terminal", true).
-COPYPATH("0:/launch.ks", "").
-COPYPATH("0:/manoeuvre.ks", "").
-COPYPATH("0:/functions.ks", "").
-COPYPATH("0:/utilities.ks", "").
-RUNONCEPATH("utilities.ks").
-RUNONCEPATH("manoeuvre.ks").
-RUNONCEPATH("launch.ks").
-RUNONCEPATH("functions.ks").
+RUNONCEPATH("0:/utilities.ks").
+RUNONCEPATH("0:/manoeuvre.ks").
+RUNONCEPATH("0:/launch.ks").
+RUNONCEPATH("0:/functions.ks").
 
-local updatefile is "0:/boot/update_" + SHIP:NAME + "_" + CORE:TAG + ".ks".
+local updatefile is "0:/boot/update_" + SHIP:NAME + CORE:TAG + ".ks".
+print updatefile.
 
 if EXISTS(updatefile) {
     COPYPATH(updatefile, "update.ks").
