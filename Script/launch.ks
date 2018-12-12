@@ -1,7 +1,5 @@
 //Script for launching a rocket
 //For now, doesn't support launching to a target
-RUNONCEPATH("utilities.ks").
-RUNONCEPATH("manoeuvre.ks").
 
 function launch {
     parameter targetAltitude is 80000.
@@ -30,7 +28,7 @@ function launch {
         }
     }
     else {
-        set targetHeading to SHIP:LATITUDE.
+        set targetHeading to 90.
     }
     local vOrbit is sqrt(BODY:MU / (targetAltitude + BODY:RADIUS)).
     local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
@@ -102,18 +100,7 @@ function launch {
     function circularize {
         parameter targetAltitude is 80000.
 
-        local r is BODY:RADIUS + SHIP:APOAPSIS.
-
-        local targetSemimajorAxis is BODY:RADIUS + (SHIP:APOAPSIS + targetAltitude)/2.
-        local currentSemimajorAxis is BODY:RADIUS + (SHIP:APOAPSIS + SHIP:PERIAPSIS)/2.
-
-        local targetSpeed is sqrt(BODY:MU * (2/r - 1/targetSemimajorAxis)).
-        local currentSpeed is sqrt(BODY:MU * (2/r - 1/currentSemimajorAxis)).
-
-        local dV is targetSpeed - currentSpeed.
-
-        print dV + " m/s required for orbit".
-        manoeuvre(dV, 0, 0, 0, "AP").
+        raisePeriapsis(SHIP:APOAPSIS - 100).
     }
 
     set stageControl to TRUE.
