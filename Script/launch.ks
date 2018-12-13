@@ -30,7 +30,7 @@ function launch {
     else {
         set targetHeading to 90.
     }
-    local vOrbit is sqrt(BODY:MU / (targetAltitude + BODY:RADIUS)).
+    local vOrbit is sqrt(BODY:MU / (BODY:ATM:HEIGHT + BODY:RADIUS)).
     local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
     local vRotY is vOrbit * cos(targetHeading).
     set targetHeading to arctan(vRotX / vRotY).
