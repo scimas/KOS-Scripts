@@ -32,8 +32,12 @@ function launch {
     }
     local vOrbit is sqrt(BODY:MU / (BODY:ATM:HEIGHT + BODY:RADIUS)).
     local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
-    local vRotY is vOrbit * cos(targetHeading).
+    local vRotY is ABS(vOrbit * cos(targetHeading)).
     set targetHeading to arctan(vRotX / vRotY).
+    print targetHeading.
+    if targetInclination > 180 {
+        set targetHeading to 180 + (360 - targetHeading).
+    }
 
     local stageControl is FALSE.
     local engineList is LIST().
@@ -54,7 +58,7 @@ function launch {
             wait until STAGE:READY.
             LIST ENGINES in engineList.
         }
-        
+
         if STAGE:NUMBER = 0 {
             return FALSE.
         }
