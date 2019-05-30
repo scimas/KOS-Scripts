@@ -1,3 +1,21 @@
+function getBurnTime {
+    parameter deltaV.
+    
+    local burnEngines is LIST().
+    LIST ENGINES in burnEngines.
+    local massBurnRate is 0.
+    local g0 is 9.80665.
+    for e in burnEngines {
+        if e:IGNITION {
+            set massBurnRate to massBurnRate + e:AVAILABLETHRUST/(e:ISP * g0).
+        }
+    }
+    local isp is SHIP:AVAILABLETHRUST / massBurnRate.
+    
+    local burnTime is SHIP:MASS * (1 - CONSTANT:E ^ (-deltaV / isp)) / massBurnRate.
+    return burnTime.
+}
+
 function raiseApoapsis {
     parameter targetApoapsis.
 
@@ -54,4 +72,32 @@ function isAtBodyAscendingNode {
 function isAtBodyDescendingNode {
     return ROUND(MOD(ORBIT:LAN - BODY:ROTATIONANGLE - SHIP:LONGITUDE - 180, 360), 0) = 0 AND 
            ROUND(SHIP:LATITUDE, 0) = 0.
+}
+
+function isAtTargetAscendingNode {
+    if VANG(VCRS(orbitBinormal(), targetBinormal()), -BODY:POSITION) < 1{
+        return TRUE.
+    }
+    else {
+        return FALSE.
+    }
+}
+
+function isAtTargetDescendingNode {
+    if VANG(-VCRS(orbitBinormal(), targetBinormal()), -BODY:POSITION) < 1{
+        return TRUE.
+    }
+    else {
+        return FALSE.
+    }
+}
+
+function needsStaging {
+    LIST ENGINES in engineList.
+    for e in engineList {
+        if e:FLAMEOUT {
+            return TRUE.
+        }
+    }
+    return FALSE.
 }
