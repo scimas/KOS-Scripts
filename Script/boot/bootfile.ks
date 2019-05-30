@@ -4,16 +4,14 @@
 @lazyglobal off.
 
 wait until SHIP:UNPACKED AND SHIP:LOADED.
-wait 2.
-wait until ADDONS:RT:HASKSCCONNECTION(SHIP).
 
 CORE:DOACTION("open terminal", true).
 RUNONCEPATH("0:/utilities.ks").
+RUNONCEPATH("0:/functions.ks").
 RUNONCEPATH("0:/manoeuvre.ks").
 RUNONCEPATH("0:/launch.ks").
-RUNONCEPATH("0:/functions.ks").
 
-local updatefile is "0:/boot/update_" + SHIP:NAME + CORE:TAG + ".ks".
+local updatefile is "0:/boot/update_" + SHIP:NAME + "_" + CORE:TAG + ".ks".
 print updatefile.
 
 if EXISTS(updatefile) {
