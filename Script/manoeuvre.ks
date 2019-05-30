@@ -2,24 +2,6 @@
 //a time in future or a position like Ap, Pe, and
 //a frame - orbit or surface
 
-function getBurnTime {
-    parameter deltaV.
-    
-    local burnEngines is LIST().
-    LIST ENGINES in burnEngines.
-    local massBurnRate is 0.
-    local g0 is 9.80665.
-    for e in burnEngines {
-        if e:IGNITION {
-            set massBurnRate to massBurnRate + e:AVAILABLETHRUST/(e:ISP * g0).
-        }
-    }
-    local isp is SHIP:AVAILABLETHRUST / massBurnRate.
-    
-    local burnTime is SHIP:MASS * (1 - CONSTANT:E ^ (-deltaV / isp)) / massBurnRate.
-    return burnTime.
-}
-
 function exec {
     parameter coastTime.
     parameter burnStartTime.
