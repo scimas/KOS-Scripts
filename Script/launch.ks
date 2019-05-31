@@ -2,6 +2,63 @@
 // A target orbit can be achieved or
 // Can be launched to a target vessel orbit
 
+function verticalAscent {
+    parameter targetHeading is 90.
+    parameter turnStartSpeed is 80.
+
+    lock STEERING to HEADING(targetHeading, 90).
+    lock THROTTLE to 1.
+
+    wait until SHIP:VELOCITY:SURFACE:MAG > turnStartSpeed.
+}
+
+function gravityTurn {
+    parameter targetAltitude is 80000.
+    parameter targetHeading is 90.
+    
+    local turnStartApoapsis is SHIP:APOAPSIS.
+    lock STEERING to HEADING(
+        targetHeading,
+        80 * (targetAltitude - SHIP:APOAPSIS)/(targetAltitude - turnStartAPOAPSIS)
+    ).
+
+    wait until SHIP:APOAPSIS > targetAltitude.
+    lock THROTTLE to 0.
+}
+
+function atmosphereExit {
+    lock STEERING to SHIP:VELOCITY:SURFACE.
+    wait until SHIP:ALTITUDE > BODY:ATM:HEIGHT.
+}
+
+function circularize {
+    parameter targetHeading is -1.
+    local targetPeriapsis is SHIP:APOAPSIS.
+    local currentOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS/2 + SHIP:PERIAPSIS/2))).
+    local targetOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS))).
+    local deltaV is targetOrbitSpeed - currentOrbitSpeed.
+    local burnTime is getBurnTime(deltaV).
+    print "Delta V: " + deltaV.
+    print "Burn Time: " + burnTime.
+    if targetHeading = -1 {
+        lock STEERING to orbitTangent().
+    }
+    else {
+        lock STEERING to HEADING(
+            targetHeading,
+            90 - VANG(UP:VECTOR, orbitTangent())
+        ).
+    }
+    wait ETA:APOAPSIS - burnTime/2.
+    cancelWarp().
+    lock THROTTLE to 1.
+    wait until SHIP:PERIAPSIS > targetPeriapsis.
+    lock THROTTLE to 0.
+    wait 2.
+    unlock THROTTLE.
+    unlock STEERING.
+}
+
 function launch {
     parameter targetAltitude is 80000.
     parameter targetInclination is 0.
@@ -33,57 +90,6 @@ function launch {
         else {
             return TRUE.
         }
-    }
-
-    function verticalAscent {
-        parameter targetHeading is 90.
-        parameter turnStartSpeed is 80.
-
-        lock STEERING to HEADING(targetHeading, 90).
-        lock THROTTLE to 1.
-
-        wait until SHIP:VELOCITY:SURFACE:MAG > turnStartSpeed.
-    }
-
-    function gravityTurn {
-        parameter targetAltitude is 80000.
-        parameter targetHeading is 90.
-        
-        local turnStartApoapsis is SHIP:APOAPSIS.
-        lock STEERING to HEADING(
-            targetHeading,
-            80 * (targetAltitude - SHIP:APOAPSIS)/(targetAltitude - turnStartAPOAPSIS)
-        ).
-
-        wait until SHIP:APOAPSIS > targetAltitude.
-        lock THROTTLE to 0.
-    }
-
-    function atmosphereExit {
-        lock STEERING to SHIP:VELOCITY:SURFACE.
-        wait until SHIP:ALTITUDE > BODY:ATM:HEIGHT.
-    }
-
-    function circularize {
-        local targetPeriapsis is SHIP:APOAPSIS.
-        local currentOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS/2 + SHIP:PERIAPSIS/2))).
-        local targetOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS))).
-        local deltaV is targetOrbitSpeed - currentOrbitSpeed.
-        local burnTime is getBurnTime(deltaV).
-        print "Delta V: " + deltaV.
-        print "Burn Time: " + burnTime.
-        lock STEERING to HEADING(
-            targetHeading,
-            90 - VANG(UP:VECTOR, orbitTangent())
-        ).
-        wait ETA:APOAPSIS - burnTime/2.
-        cancelWarp().
-        lock THROTTLE to 1.
-        wait until SHIP:PERIAPSIS > targetPeriapsis.
-        lock THROTTLE to 0.
-        wait 2.
-        unlock THROTTLE.
-        unlock STEERING.
     }
 
     print "Waiting for launch window".
@@ -133,6 +139,8 @@ function launchToTarget {
     parameter targetAltitude is 100000.
     parameter turnStartSpeed is 60.
 
+    orbitFromTarget().
+
     local stageControl is FALSE.
 
     when STAGE:NUMBER > 0 and stageControl = TRUE then {
@@ -147,54 +155,6 @@ function launchToTarget {
         else {
             return TRUE.
         }
-    }
-
-    function verticalAscent {
-        parameter targetHeading is 90.
-        parameter turnStartSpeed is 80.
-
-        lock STEERING to HEADING(targetHeading, 90).
-        lock THROTTLE to 1.
-
-        wait until SHIP:VELOCITY:SURFACE:MAG > turnStartSpeed.
-    }
-
-    function gravityTurn {
-        parameter targetAltitude is 80000.
-        parameter targetHeading is 90.
-        
-        local turnStartApoapsis is SHIP:APOAPSIS.
-        lock STEERING to HEADING(
-            targetHeading,
-            80 * (targetAltitude - SHIP:APOAPSIS)/(targetAltitude - turnStartAPOAPSIS)
-        ).
-
-        wait until SHIP:APOAPSIS > targetAltitude.
-        lock THROTTLE to 0.
-    }
-
-    function atmosphereExit {
-        lock STEERING to SHIP:VELOCITY:SURFACE.
-        wait until SHIP:ALTITUDE > BODY:ATM:HEIGHT.
-    }
-
-    function circularize {
-        local currentOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS/2 + SHIP:PERIAPSIS/2))).
-        local targetOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS))).
-        local deltaV is targetOrbitSpeed - currentOrbitSpeed.
-        local burnTime is getBurnTime(deltaV).
-        lock STEERING to HEADING(
-            targetHeading,
-            90 - VANG(UP:VECTOR, orbitTangent())
-        ).
-        wait ETA:APOAPSIS - burnTime * 0.45.
-        cancelWarp().
-        lock THROTTLE to 1.
-        wait until SHIP:PERIAPSIS > SHIP:APOAPSIS * 0.9.
-        lock THROTTLE to 0.
-        wait 2.
-        unlock THROTTLE.
-        unlock STEERING.
     }
 
     print "Waiting for launch window".
@@ -229,7 +189,7 @@ function launchToTarget {
     print "Out of atmosphere".
 
     print "Waiting for circularization burn".
-    circularize().
+    circularize(targetHeading).
     print "Entered orbit".
 
     set stageControl to FALSE.
