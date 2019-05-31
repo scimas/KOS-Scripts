@@ -96,7 +96,18 @@ function needsStaging {
     LIST ENGINES in engineList.
     for e in engineList {
         if e:FLAMEOUT {
-            return TRUE.
+            for en in engineList {
+                if not en:FLAMEOUT and en <> e {
+                    return TRUE.
+                }
+            }
+        }
+    }
+    if SHIP:MAXTHRUST = 0 {
+        for en in engineList {
+            if not en:FLAMEOUT {
+                return TRUE.
+            }
         }
     }
     return FALSE.
