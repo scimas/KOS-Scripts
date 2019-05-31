@@ -30,3 +30,10 @@ function orbitFromTarget {
         return FALSE.
     }
 }
+
+function modulo {
+    parameter a.
+    parameter n.
+
+    return a - ABS(n) * FLOOR(a/ABS(n)).
+}
