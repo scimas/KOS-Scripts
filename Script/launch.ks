@@ -65,14 +65,6 @@ function launch {
     parameter targetLAN is MOD(ORBIT:LAN + 90, 360).
     parameter targetArgP is 0.
     parameter turnStartSpeed is 60.
-
-    orbitFromParameters(
-        targetAltitude,
-        targetAltitude,
-        targetInclination,
-        targetLAN,
-        targetArgP
-    ).
     
     local stageControl is FALSE.
     local engineList is LIST().
@@ -93,13 +85,13 @@ function launch {
     }
 
     print "Waiting for launch window".
-    wait until isAtTargetAscendingNode(MOD(ORBIT:LAN + 90, 360)) or isAtTargetDescendingNode(MOD(ORBIT:LAN + 90, 360)).
-    local targetHeading to arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
+    wait until isAtTargetAscendingNode() or isAtTargetDescendingNode().
+    local targetHeading is arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
     local vOrbit is sqrt(BODY:MU / (BODY:ATM:HEIGHT + BODY:RADIUS)).
     local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
     local vRotY is ABS(vOrbit * cos(targetHeading)).
     set targetHeading to arctan(vRotX / vRotY).
-    if isAtTargetAscendingNode(MOD(ORBIT:LAN + 90, 360)) {
+    if isAtTargetAscendingNode() {
         set targetHeading to 180 - arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
     }
     cancelWarp().
