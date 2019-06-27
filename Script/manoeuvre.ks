@@ -13,7 +13,7 @@ function exec {
     wait until TIME:SECONDS > burnStartTime.
 
     lock THROTTLE to 1.
-    wait until manNode:DELTAV:MAG < 1.
+    wait until TIME:SECONDS > burnStopTime.
 
     lock THROTTLE to 0.
     unlock STEERING.
@@ -34,6 +34,7 @@ function manoeuvre {
     
     local requiredDeltaV is V(dV_tangent, dV_normal, dV_binormal):MAG.
     local burnTime is getBurnTime(requiredDeltaV).
+    local halfTime is getBurnTime(requiredDeltaV/2).
     local coastTime is 0.
     local burnStartTime is 0.
     local burnStopTime is 0.
@@ -42,20 +43,20 @@ function manoeuvre {
     local okayToBurn is true.
 
     if burnStart <> 0 {
-        set coastTime to TIME:SECONDS + MAX(burnStart - 15, 0).
+        set coastTime to TIME:SECONDS + MAX(burnStart - 60, 0).
         set burnStartTime to TIME:SECONDS + burnStart.
         set burnStopTime to burnStartTime + burnTime.
         set manNode:ETA to burnStart.
     }
     else if position = "AP" {
-        set coastTime to TIME:SECONDS + ETA:APOAPSIS - burnTime / 2 - 15.
-        set burnStartTime to TIME:SECONDS + ETA:APOAPSIS - burnTime / 2.
+        set coastTime to TIME:SECONDS + ETA:APOAPSIS - halfTime - 60.
+        set burnStartTime to TIME:SECONDS + ETA:APOAPSIS - halfTime.
         set burnStopTime to burnStartTime + burnTime.
         set manNode:ETA to ETA:APOAPSIS.
     }
     else if position = "PE" {
-        set coastTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime / 2 - 15.
-        set burnStartTime to TIME:SECONDS + ETA:PERIAPSIS - burnTime / 2.
+        set coastTime to TIME:SECONDS + ETA:PERIAPSIS - halfTime - 60.
+        set burnStartTime to TIME:SECONDS + ETA:PERIAPSIS - halfTime.
         set burnStopTime to burnStartTime + burnTime.
         set manNode:ETA to ETA:PERIAPSIS.
     }
