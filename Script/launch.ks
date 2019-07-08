@@ -1,6 +1,7 @@
 // Script for launching a rocket
 // A target orbit can be achieved or
 // Can be launched to a target vessel orbit
+@lazyglobal off.
 
 function verticalAscent {
     parameter targetHeading is 90.
@@ -15,15 +16,34 @@ function verticalAscent {
 function gravityTurn {
     parameter targetAltitude is 80000.
     parameter targetHeading is 90.
+    parameter maintainTWR is false.
+    parameter targetTWR is 0.
     
-    local turnStartApoapsis is SHIP:APOAPSIS.
+    lock twrScale to 1.
+    if maintainTWR {
+        lock twrScale to targetTWR / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / BODY:RADIUS ^ 2)).
+    }
+    lock THROTTLE to min(twrScale, 1).
+
+    // local turnStartApoapsis is SHIP:APOAPSIS.
+    // local s is 12.
     lock STEERING to HEADING(
         targetHeading,
-        80 * (targetAltitude - SHIP:APOAPSIS)/(targetAltitude - turnStartAPOAPSIS)
+        85
+    ).
+    wait 5.
+    wait until VANG(SHIP:FACING:VECTOR, SHIP:VELOCITY:SURFACE) < 0.5.
+    
+    lock STEERING to HEADING(
+        targetHeading,
+        90 - VANG(SHIP:VELOCITY:SURFACE, UP:VECTOR) - 1
     ).
 
     wait until SHIP:APOAPSIS > targetAltitude.
     lock THROTTLE to 0.
+    if maintainTWR {
+        unlock twrScale.
+    }
 }
 
 function atmosphereExit {
@@ -49,10 +69,11 @@ function circularize {
             90 - VANG(UP:VECTOR, orbitTangent())
         ).
     }
-    wait ETA:APOAPSIS - burnTime/2.
+    wait ETA:APOAPSIS - getBurnTime(deltaV/2) - 15.
     cancelWarp().
+    wait 15.
     lock THROTTLE to 1.
-    wait until SHIP:PERIAPSIS > targetPeriapsis.
+    wait burnTime.
     lock THROTTLE to 0.
     wait 2.
     unlock THROTTLE.
@@ -61,10 +82,12 @@ function circularize {
 
 function launch {
     parameter targetAltitude is 80000.
-    parameter targetInclination is 0.
+    parameter targetInclination is SHIP:LATITUDE.
+    parameter turnStartSpeed is 60.
+    parameter maintainTWR is false.
+    parameter targetTWR is 0.
     parameter targetLAN is MOD(ORBIT:LAN + 90, 360).
     parameter targetArgP is 0.
-    parameter turnStartSpeed is 60.
     
     local stageControl is FALSE.
     local engineList is LIST().
@@ -84,16 +107,11 @@ function launch {
         }
     }
 
-    print "Waiting for launch window".
-    wait until isAtTargetAscendingNode() or isAtTargetDescendingNode().
     local targetHeading is arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
     local vOrbit is sqrt(BODY:MU / (BODY:ATM:HEIGHT + BODY:RADIUS)).
     local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
     local vRotY is ABS(vOrbit * cos(targetHeading)).
     set targetHeading to arctan(vRotX / vRotY).
-    if isAtTargetAscendingNode() {
-        set targetHeading to 180 - arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
-    }
     cancelWarp().
     wait 2.
     print "Launching now".
@@ -108,7 +126,7 @@ function launch {
     print "Vertical ascent complete".
 
     print "Starting gravity turn".
-    gravityTurn(targetAltitude, targetHeading).
+    gravityTurn(targetAltitude, targetHeading, maintainTWR, targetTWR).
     print "Gravity turn complete".
 
     print "Coasting to atmosphere exit, if it exists".
