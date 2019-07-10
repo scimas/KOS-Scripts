@@ -31,7 +31,7 @@ function gravityTurn {
         targetHeading,
         85
     ).
-    wait 5.
+    wait 1.
     wait until VANG(SHIP:FACING:VECTOR, SHIP:VELOCITY:SURFACE) < 0.5.
     
     lock STEERING to HEADING(
@@ -41,9 +41,7 @@ function gravityTurn {
 
     wait until SHIP:APOAPSIS > targetAltitude.
     lock THROTTLE to 0.
-    if maintainTWR {
-        unlock twrScale.
-    }
+    unlock twrScale.
 }
 
 function atmosphereExit {
