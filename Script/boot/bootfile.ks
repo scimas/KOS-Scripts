@@ -1,5 +1,5 @@
 //General boot file for all crafts.
-//Actual instructions to be written in update_ship_name.ks
+//Actual instructions to be written in update_<ship name>_<core tag>.ks
 
 @lazyglobal off.
 
