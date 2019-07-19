@@ -10,12 +10,12 @@ local handleRoll is false.
 local quit is false.
 
 local wp is 0.
-lock rollAngle to VANG(UP:VECTOR, SHIP:FACING:TOPVECTOR) * VDOT(VCRS(SHIP:FACING:TOPVECTOR, UP:VECTOR), SHIP:FACING:VECTOR).
+lock rollAngle to VANG(UP:VECTOR, SHIP:FACING:STARVECTOR) - 90.
 
 local rollPID is PIDLOOP(
-    0.1,
-    0.04,
     0.02,
+    0.005,
+    0.008,
     -1,
     1
 ).
