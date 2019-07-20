@@ -11,6 +11,7 @@ local quit is false.
 
 local wp is 0.
 lock rollAngle to VANG(UP:VECTOR, SHIP:FACING:STARVECTOR) - 90.
+local change is 0.
 
 local rollPID is PIDLOOP(
     0.02,
@@ -28,13 +29,13 @@ local pitchPID is PIDLoop(
     -1,
     1
 ).
-set pitchPID:SETPOINT to 0.
+set pitchPID:SETPOINT to SHIP:VERTICALSPEED.
 
 on AG6 {
     if guiding {
         set guiding to false.
     }
-    else if wp <> "0" {
+    else {
         set guiding to true.
         set wp to WAYPOINT(wpname).
     }
@@ -49,6 +50,7 @@ on AG7 {
     }
     else {
         set handlePitch to true.
+        set pitchPID:SETPOINT to ROUND(SHIP:VERTICALSPEED, 0).
     }
     return true.
 }
@@ -61,6 +63,7 @@ on AG9 {
     }
     else {
         set handleRoll to true.
+        set rollPID:SETPOINT to ROUND(rollAngle, 0).
     }
     return true.
 }
@@ -96,6 +99,36 @@ until quit {
     }
     if not (handlePitch or handleRoll) {
         wait 0.25.
+    }
+    if TERMINAL:INPUT:HASCHAR {
+        set change to TERMINAL:INPUT:GETCHAR().
+        if change = "w" {
+            set pitchPID:SETPOINT to pitchPID:SETPOINT - 1.
+        }
+        else if change = "s" {
+            set pitchPID:SETPOINT to pitchPID:SETPOINT + 1.
+        }
+        else if change = "x" {
+            set pitchPID:SETPOINT to 0.
+        }
+        else if change = "q" {
+            set rollPID:SETPOINT to rollPID:SETPOINT - 1.
+        }
+        else if change = "e" {
+            set rollPID:SETPOINT to rollPID:SETPOINT + 1.
+        }
+        else if change = "r" {
+            set rollPID:SETPOINT to 0.
+        }
+        else if change = "b" {
+            TOGGLE BRAKES.
+        }
+        else if change = "7" {
+            TOGGLE AG7.
+        }
+        else if change = "9" {
+            TOGGLE AG9.
+        }
     }
     print ROUND(SHIP:VERTICALSPEED, 3) at (0, 1).
     print ROUND(pitchPID:OUTPUT, 3) at (0, 2).
