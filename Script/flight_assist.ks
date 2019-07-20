@@ -34,7 +34,7 @@ on AG6 {
     if guiding {
         set guiding to false.
     }
-    else {
+    else if wp <> "0" {
         set guiding to true.
         set wp to WAYPOINT(wpname).
     }
