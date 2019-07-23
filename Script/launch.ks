@@ -25,21 +25,16 @@ function gravityTurn {
     }
     lock THROTTLE to min(twrScale, 1).
 
-    // local turnStartApoapsis is SHIP:APOAPSIS.
-    // local s is 12.
+    local turnParameter is BODY:ATM:HEIGHT * 0.7.
     lock STEERING to HEADING(
         targetHeading,
-        85
+        ((90 / turnParameter^4) * (turnParameter - SHIP:ALTITUDE)^4 + (90 / turnParameter^0.5) * (turnParameter - SHIP:ALTITUDE)^0.5)/2
     ).
-    wait 1.
-    wait until VANG(SHIP:FACING:VECTOR, SHIP:VELOCITY:SURFACE) < 0.5.
-    
-    lock STEERING to HEADING(
-        targetHeading,
-        90 - VANG(SHIP:VELOCITY:SURFACE, UP:VECTOR) - 1
-    ).
+    wait until SHIP:ALTITUDE > turnParameter - 100 or SHIP:APOAPSIS > targetAltitude.
 
+    lock STEERING to  HEADING(targetHeading, 0).
     wait until SHIP:APOAPSIS > targetAltitude.
+    
     lock THROTTLE to 0.
     unlock twrScale.
 }
@@ -81,15 +76,13 @@ function circularize {
 function launch {
     parameter targetAltitude is 80000.
     parameter targetInclination is SHIP:LATITUDE.
+    parameter atAN is false.
     parameter turnStartSpeed is 60.
     parameter maintainTWR is false.
     parameter targetTWR is 0.
     parameter targetLAN is MOD(ORBIT:LAN + 90, 360).
-    parameter targetArgP is 0.
     
     local stageControl is FALSE.
-    local engineList is LIST().
-    LIST ENGINES in engineList.
 
     when STAGE:NUMBER > 0 and stageControl = TRUE then {
         if needsStaging() {
@@ -106,10 +99,13 @@ function launch {
     }
 
     local targetHeading is arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
+    if atAN {
+        set targetHeading to 90 + (90 - targetHeading).
+    }
     local vOrbit is sqrt(BODY:MU / (BODY:ATM:HEIGHT + BODY:RADIUS)).
     local vRotX is vOrbit * sin(targetHeading) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
-    local vRotY is ABS(vOrbit * cos(targetHeading)).
-    set targetHeading to arctan(vRotX / vRotY).
+    local vRotY is vOrbit * cos(targetHeading).
+    set targetHeading to arctan2(vRotX, vRotY).
     cancelWarp().
     wait 2.
     print "Launching now".
@@ -198,6 +194,85 @@ function launchToTarget {
 
     print "Waiting for circularization burn".
     circularize(targetHeading).
+    print "Entered orbit".
+
+    set stageControl to FALSE.
+    lock THROTTLE to 0.
+    unlock STEERING.
+    unlock THROTTLE.
+
+    print "Launch complete".
+}
+
+function primitive_launch {
+    parameter targetAltitude is 80000.
+    parameter targetHeading is 90.
+    parameter turnStartSpeed is 60.
+    
+    local stageControl is FALSE.
+
+    when STAGE:NUMBER > 0 and stageControl = TRUE then {
+        if needsStaging() {
+            wait 0.5.
+            STAGE.
+            wait until STAGE:READY.
+        }
+        if STAGE:NUMBER = 0 {
+            return FALSE.
+        }
+        else {
+            return TRUE.
+        }
+    }
+
+    cancelWarp().
+    wait 2.
+    print "Launching now".
+
+    set stageControl to TRUE.
+    if SHIP:AVAILABLETHRUST = 0 {
+        STAGE.
+    }
+
+    verticalAscent(targetHeading, turnStartSpeed).
+    lock STEERING to HEADING(targetHeading, 85).
+    
+    wait until SHIP:ALTITUDE > 2_000.
+    lock STEERING to HEADING(targetHeading, 75).
+
+    wait until SHIP:ALTITUDE > 5_000.
+    lock STEERING to HEADING(targetHeading, 70).
+
+    wait until SHIP:ALTITUDE > 8_000.
+    lock STEERING to HEADING(targetHeading, 60).
+
+    wait until SHIP:ALTITUDE > 11_000.
+    lock STEERING to HEADING(targetHeading, 50).
+
+    wait until SHIP:ALTITUDE > 14_000.
+    lock STEERING to HEADING(targetHeading, 45).
+
+    wait until SHIP:ALTITUDE > 20_000.
+    lock STEERING to HEADING(targetHeading, 40).
+
+    wait until SHIP:ALTITUDE > 30_000.
+    lock STEERING to HEADING(targetHeading, 30).
+
+    wait until SHIP:ORBIT:APOAPSIS > 50_000.
+    lock STEERING to HEADING(targetHeading, 15).
+
+    wait until SHIP:ORBIT:APOAPSIS > 70_000.
+    lock STEERING to HEADING(targetHeading, 0).
+
+    wait until SHIP:ORBIT:APOAPSIS > targetAltitude.
+    lock THROTTLE to 0.
+    
+    print "Coasting to atmosphere exit, if it exists.".
+    atmosphereExit().
+    print "Out of atmosphere".
+
+    print "Waiting for circularization burn".
+    circularize().
     print "Entered orbit".
 
     set stageControl to FALSE.
