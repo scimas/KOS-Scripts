@@ -19,6 +19,19 @@ if flist:LENGTH <= 1 {
     COPYPATH("0:/flight_assist.ks", "").
 }
 
+print "Enter waypoint name (or 0)".
+local wpname is "".
+until false {
+    local ch is TERMINAL:INPUT:GETCHAR().
+    if ch = TERMINAL:INPUT:RETURN {
+        break.
+    }
+    else {
+        set wpname to wpname + ch.
+        print wpname at (0, 3).
+    }
+}
+
 print "Activating flight assist system.".
 SAS off.
-RUNPATH("flight_assist.ks").
+RUNPATH("flight_assist.ks", wpname).
