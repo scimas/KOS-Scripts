@@ -23,9 +23,9 @@ local rollPID is PIDLOOP(
 set rollPID:SETPOINT to 0.
 
 local pitchPID is PIDLoop(
-    0.01,
-    0.008,
     0.005,
+    0.0016,
+    0.001,
     -1,
     1
 ).
@@ -122,6 +122,9 @@ until quit {
         }
         else if change = "b" {
             TOGGLE BRAKES.
+        }
+        else if change = "g" {
+            TOGGLE GEAR.
         }
         else if change = "7" {
             TOGGLE AG7.
