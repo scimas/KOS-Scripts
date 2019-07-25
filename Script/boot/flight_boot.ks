@@ -5,6 +5,7 @@
 
 wait until SHIP:UNPACKED AND SHIP:LOADED.
 CORE:DOACTION("open terminal", true).
+clearscreen.
 
 local flist is LIST().
 list FILES in flist.
