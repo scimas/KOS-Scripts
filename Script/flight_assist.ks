@@ -1,75 +1,75 @@
-@lazyglobal off.
+@LAZYGLOBAL OFF.
 
 parameter wpname is "0".
 
 clearscreen.
 
-local guiding is false.
-local handlePitch is false.
-local handleRoll is false.
-local quit is false.
+local guiding is FALSE.
+local handlePitch is FALSE.
+local handleRoll is FALSE.
+local quit is FALSE.
 
 local wp is 0.
-lock rollAngle to VANG(UP:VECTOR, SHIP:FACING:STARVECTOR) - 90.
+lock rollAngle to vang(up:vector, ship:facing:starvector) - 90.
 local change is 0.
 
-local rollPID is PIDLOOP(
+local rollPID is pidLoop(
     0.02,
     0.005,
     0.008,
     -1,
     1
 ).
-set rollPID:SETPOINT to 0.
+set rollPID:setpoint to 0.
 
-local pitchPID is PIDLoop(
+local pitchPID is pidLoop(
     0.005,
     0.0016,
     0.001,
     -1,
     1
 ).
-set pitchPID:SETPOINT to SHIP:VERTICALSPEED.
+set pitchPID:setpoint to SHIP:verticalSpeed.
 
 on AG6 {
     if guiding {
-        set guiding to false.
+        set guiding to FALSE.
     }
     else {
-        set guiding to true.
-        set wp to WAYPOINT(wpname).
+        set guiding to TRUE.
+        set wp to waypoint(wpname).
     }
-    return true.
+    return TRUE.
 }
 
 on AG7 {
     if handlePitch {
-        set handlePitch to false.
-        pitchPID:RESET().
-        set SHIP:CONTROL:NEUTRALIZE to true.
+        set handlePitch to FALSE.
+        pitchPID:reset().
+        set ship:control:neutralize to TRUE.
     }
     else {
-        set handlePitch to true.
-        set pitchPID:SETPOINT to ROUND(SHIP:VERTICALSPEED, 0).
+        set handlePitch to TRUE.
+        set pitchPID:setpoint to round(ship:verticalSpeed, 0).
     }
-    return true.
+    return TRUE.
 }
 
 on AG9 {
     if handleRoll {
-        set handleRoll to false.
-        rollPID:RESET().
-        set SHIP:CONTROL:NEUTRALIZE to true.
+        set handleRoll to FALSE.
+        rollPID:reset().
+        set ship:control:neutralize to TRUE.
     }
     else {
-        set handleRoll to true.
-        set rollPID:SETPOINT to ROUND(rollAngle, 0).
+        set handleRoll to TRUE.
+        set rollPID:setpoint to round(rollAngle, 0).
     }
-    return true.
+    return TRUE.
 }
 
 on AG10 {
-    set quit to true.
+    set quit to TRUE.
 }
 
 print "Pitch" at (0, 0).
@@ -79,67 +79,67 @@ local headN is 0.
 local headD is 0.
 until quit {
     if handlePitch {
-        set SHIP:CONTROL:PITCH to pitchPID:UPDATE(TIME:SECONDS, SHIP:VERTICALSPEED).
+        set ship:control:pitch to pitchPID:update(time:seconds, ship:verticalSpeed).
         print "On " at (0, 4).
     }
     else {
         print "Off" at (0, 4).
     }
     if handleRoll {
-        set SHIP:CONTROL:ROLL to rollPID:UPDATE(TIME:SECONDS, rollAngle).
+        set ship:control:roll to rollPID:update(time:seconds, rollAngle).
         print "On " at (14, 4).
     }
     else {
         print "Off" at (14, 4).
     }
     if guiding {
-        set headN to cos(wp:GEOPOSITION:LAT) * sin(wp:GEOPOSITION:LNG - SHIP:LONGITUDE).
-        set headD to cos(SHIP:LATITUDE) * sin(wp:GEOPOSITION:LAT) - sin(SHIP:LATITUDE) * cos(wp:GEOPOSITION:LAT) * cos(wp:GEOPOSITION:LNG - SHIP:LONGITUDE).
+        set headN to cos(wp:geoposition:lat) * sin(wp:geoposition:lng - ship:longitude).
+        set headD to cos(ship:latitude) * sin(wp:geoPosition:lat) - sin(ship:latitude) * cos(wp:geoPosition:lat) * cos(wp:geoPosition:lng - ship:longitude).
         set head to mod(arctan2(headN, headD) + 360, 360).
     }
     if not (handlePitch or handleRoll) {
         wait 0.25.
     }
-    if TERMINAL:INPUT:HASCHAR {
-        set change to TERMINAL:INPUT:GETCHAR().
+    if terminal:input:haschar() {
+        set change to terminal:input:getchar().
         if change = "w" {
-            set pitchPID:SETPOINT to pitchPID:SETPOINT - 1.
+            set pitchPID:setpoint to pitchPID:setpoint - 1.
         }
         else if change = "s" {
-            set pitchPID:SETPOINT to pitchPID:SETPOINT + 1.
+            set pitchPID:setpoint to pitchPID:setpoint + 1.
         }
         else if change = "x" {
-            set pitchPID:SETPOINT to 0.
+            set pitchPID:setpoint to 0.
         }
         else if change = "q" {
-            set rollPID:SETPOINT to rollPID:SETPOINT - 1.
+            set rollPID:setpoint to rollPID:setpoint - 1.
         }
         else if change = "e" {
-            set rollPID:SETPOINT to rollPID:SETPOINT + 1.
+            set rollPID:setpoint to rollPID:setpoint + 1.
         }
         else if change = "r" {
-            set rollPID:SETPOINT to 0.
+            set rollPID:setpoint to 0.
         }
         else if change = "b" {
-            TOGGLE BRAKES.
+            toggle BRAKES.
         }
         else if change = "g" {
-            TOGGLE GEAR.
+            toggle GEAR.
         }
         else if change = "7" {
-            TOGGLE AG7.
+            toggle AG7.
         }
         else if change = "9" {
-            TOGGLE AG9.
+            toggle AG9.
         }
     }
-    print ROUND(SHIP:VERTICALSPEED, 3) at (0, 1).
-    print ROUND(pitchPID:OUTPUT, 3) at (0, 2).
-    print ROUND(rollAngle, 3) at (14, 1).
-    print ROUND(rollPID:OUTPUT, 3) at (14, 2).
+    print round(ship:verticalSpeed, 3) at (0, 1).
+    print round(pitchPID:output, 3) at (0, 2).
+    print round(rollAngle, 3) at (14, 1).
+    print round(rollPID:output, 3) at (14, 2).
     print "Heading " + head at (0, 5).
     wait 0.
 }
 
-set SHIP:CONTROL:NEUTRALIZE to true.
+set ship:control:neutralize to TRUE.
 unlock rollAngle.
