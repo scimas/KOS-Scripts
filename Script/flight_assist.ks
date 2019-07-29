@@ -3,6 +3,11 @@
 parameter wpname is "0".
 
 clearscreen.
+runpath("lib_Navigation.ks").
+
+function rollAngle {
+    return vang(localVertical(), vxcl(surfaceTangent(), ship:facing:starvector)).
+}
 
 local guiding is FALSE.
 local handlePitch is FALSE.
@@ -10,7 +15,6 @@ local handleRoll is FALSE.
 local quit is FALSE.
 
 local wp is 0.
-lock rollAngle to vang(up:vector, ship:facing:starvector) - 90.
 local change is 0.
 
 local rollPID is pidLoop(
@@ -63,7 +67,7 @@ on AG9 {
     }
     else {
         set handleRoll to TRUE.
-        set rollPID:setpoint to round(rollAngle, 0).
+        set rollPID:setpoint to round(rollAngle(), 0).
     }
     return TRUE.
 }
@@ -86,7 +90,7 @@ until quit {
         print "Off" at (0, 4).
     }
     if handleRoll {
-        set ship:control:roll to rollPID:update(time:seconds, rollAngle).
+        set ship:control:roll to rollPID:update(time:seconds, rollAngle()).
         print "On " at (14, 4).
     }
     else {
@@ -135,11 +139,10 @@ until quit {
     }
     print round(ship:verticalSpeed, 3) at (0, 1).
     print round(pitchPID:output, 3) at (0, 2).
-    print round(rollAngle, 3) at (14, 1).
+    print round(rollAngle(), 3) at (14, 1).
     print round(rollPID:output, 3) at (14, 2).
     print "Heading " + head at (0, 5).
     wait 0.
 }
 
 set ship:control:neutralize to TRUE.
-unlock rollAngle.
