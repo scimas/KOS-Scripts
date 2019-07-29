@@ -17,6 +17,7 @@ if not homeConnection:isconnected() {
 }
 
 if flist:length <= 1 {
+    copypath("0:/library/lib_Navigation.ks").
     copypath("0:/flight_assist.ks", "").
 }
 
@@ -27,10 +28,13 @@ until false {
     if ch = terminal:input:return {
         break.
     }
+    else if ch = terminal:input:backspace {
+        set wpname to wpname:remove(wpname:length - 1, 1).
+    }
     else {
         set wpname to wpname + ch.
-        print wpname at (0, 3).
     }
+    print wpname at (0, 3).
 }
 
 print "Activating flight assist system.".
