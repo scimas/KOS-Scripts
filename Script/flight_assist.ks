@@ -3,7 +3,7 @@
 parameter wpname is "0".
 
 clearscreen.
-runpath("lib_Navigation.ks").
+runOncePath("lib_navigation.ks").
 
 function rollAngle {
     return vang(localVertical(), vxcl(surfaceTangent(), ship:facing:starvector)).

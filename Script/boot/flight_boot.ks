@@ -17,8 +17,8 @@ if not homeConnection:isconnected() {
 }
 
 if flist:length <= 1 {
-    copypath("0:/library/lib_Navigation.ks").
-    copypath("0:/flight_assist.ks", "").
+    copyPath("0:/library/lib_navigation.ks").
+    copyPath("0:/flight_assist.ks", "").
 }
 
 print "Enter waypoint name (or 0)".
@@ -39,4 +39,4 @@ until false {
 
 print "Activating flight assist system.".
 SAS off.
-runpath("flight_assist.ks", wpname).
+runPath("flight_assist.ks", wpname).
