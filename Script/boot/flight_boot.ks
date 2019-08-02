@@ -21,22 +21,23 @@ if flist:length <= 1 {
     copyPath("0:/flight_assist.ks", "").
 }
 
-print "Enter waypoint name (or 0)".
-local wpname is "".
-until false {
-    local ch is terminal:input:getchar().
-    if ch = terminal:input:return {
-        break.
-    }
-    else if ch = terminal:input:backspace {
-        set wpname to wpname:remove(wpname:length - 1, 1).
-    }
-    else {
-        set wpname to wpname + ch.
-    }
-    print wpname at (0, 3).
-}
+print "Flight Assist system ready for activation.".
+// print "Enter waypoint name (or 0)".
+// local wpname is "".
+// until false {
+//     local ch is terminal:input:getchar().
+//     if ch = terminal:input:return {
+//         break.
+//     }
+//     else if ch = terminal:input:backspace {
+//         set wpname to wpname:remove(wpname:length - 1, 1).
+//     }
+//     else {
+//         set wpname to wpname + ch.
+//     }
+//     print wpname at (0, 3).
+// }
 
-print "Activating flight assist system.".
-SAS off.
-runPath("flight_assist.ks", wpname).
+// print "Activating flight assist system.".
+// SAS off.
+// runPath("flight_assist.ks", wpname).

@@ -1,6 +1,6 @@
 @LAZYGLOBAL OFF.
 
-parameter wpname is "0".
+parameter point is 0.
 
 clearscreen.
 runOncePath("lib_navigation.ks").
@@ -35,9 +35,8 @@ on AG6 {
     if guiding {
         set guiding to FALSE.
     }
-    else {
+    else if point <> 0 {
         set guiding to TRUE.
-        set wp to waypoint(wpname).
     }
     return TRUE.
 }
@@ -75,8 +74,6 @@ on AG10 {
 print "Pitch" at (0, 0).
 print "Roll" at (14, 0).
 local head is 0.
-local headN is 0.
-local headD is 0.
 until quit {
     if handlePitch {
         set ship:control:pitch to pitchPID:update(time:seconds, ship:verticalSpeed).
@@ -93,9 +90,7 @@ until quit {
         print "Off" at (14, 4).
     }
     if guiding {
-        set headN to cos(wp:geoposition:lat) * sin(wp:geoposition:lng - ship:longitude).
-        set headD to cos(ship:latitude) * sin(wp:geoPosition:lat) - sin(ship:latitude) * cos(wp:geoPosition:lat) * cos(wp:geoPosition:lng - ship:longitude).
-        set head to mod(arctan2(headN, headD) + 360, 360).
+        set head to greatCircleHeading(point).
     }
     if not (handlePitch or handleRoll) {
         wait 0.25.
