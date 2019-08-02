@@ -121,6 +121,9 @@ until quit {
         else if change = "g" {
             toggle GEAR.
         }
+        else if change = "6" {
+            toggle AG6.
+        }
         else if change = "7" {
             toggle AG7.
         }

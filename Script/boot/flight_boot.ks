@@ -17,7 +17,7 @@ if not homeConnection:isconnected() {
 }
 
 if flist:length <= 1 {
-    copyPath("0:/library/lib_navigation.ks").
+    copyPath("0:/library/lib_navigation.ks", "").
     copyPath("0:/flight_assist.ks", "").
 }
 

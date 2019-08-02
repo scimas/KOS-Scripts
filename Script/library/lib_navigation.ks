@@ -157,7 +157,7 @@ function phaseAngle {
 
 function greatCircleHeading {
     parameter point.    // Should be GeoCoordinates, a waypoint or a vessel
-    local spot is 0.
+    local spot is point.
     if point:typename() = "Waypoint" {
         set spot to point:geoPosition.
     }
