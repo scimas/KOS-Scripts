@@ -5,10 +5,6 @@ parameter wpname is "0".
 clearscreen.
 runOncePath("lib_navigation.ks").
 
-function rollAngle {
-    return vang(localVertical(), vxcl(surfaceTangent(), ship:facing:starvector)).
-}
-
 local guiding is FALSE.
 local handlePitch is FALSE.
 local handleRoll is FALSE.

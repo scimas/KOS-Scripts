@@ -36,6 +36,26 @@ function localVertical {
     return up:vector.
 }
 
+function pitchAngle {
+    return vang(ship:facing:vector, localVertical()).
+}
+
+function yawAngle {
+    local tangent is orbitTangent().
+    if body:atm:exists and ship:altitude < body:atm:height {
+        set tangent to surfaceTangent().
+    }
+    return vang(vxcl(localVertical(), ship:facing:vector), tangent).
+}
+
+function rollAngle {
+    local tangent is orbitTangent().
+    if body:atm:exists and ship:altitude < body:atm:height {
+        set tangent to surfaceTangent().
+    }
+    return vang(localVertical(), vxcl(tangent, ship:facing:starvector)).
+}
+
 function targetTangent {
     return target:velocity:orbit:normalized.
 }
