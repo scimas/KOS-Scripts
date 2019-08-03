@@ -102,18 +102,7 @@ function launch {
         }
     }
 
-    function targetHeading {
-        local head is arcsin(cos(targetInclination) / cos(SHIP:LATITUDE)).
-        if angleToRelativeAscendingNode(orbitBinormal(), targetBinormal()) < angleToRelativeDescendingNode(orbitBinormal(), targetBinormal()) {
-            set head to 90 + (90 - head).
-        }
-        local vOrbit is sqrt(BODY:MU / (BODY:ATM:HEIGHT + BODY:RADIUS)).
-        local vRotX is vOrbit * sin(head) - (2 * CONSTANT:PI * BODY:RADIUS) / BODY:ROTATIONPERIOD * cos(SHIP:LATITUDE).
-        local vRotY is vOrbit * cos(head).
-        set head to arctan2(vRotX, vRotY).
-        return head.
-    }
-    set launch_params["target_heading"] to targetHeading@.
+    set launch_params["target_heading"] to { return azimuth(launch_params["target_inclination"], launch_params["target_altitude"]). }.
     kuniverse:timewarp:cancelWarp().
     print "Launching now".
 

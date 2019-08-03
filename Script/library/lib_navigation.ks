@@ -1,39 +1,66 @@
 @LAZYGLOBAL OFF.
 
+// Same as orbital prograde vector for ves
 function orbitTangent {
-    return ship:velocity:orbit:normalized.
+    parameter ves is ship.
+
+    return ves:velocity:orbit:normalized.
 }
 
+// In the direction of orbital angular momentum of ves
 function orbitBinormal {
-    return vcrs(-body:position, orbitTangent()):normalized.
+    parameter ves is ship.
+
+    return vcrs(ves:position - ves:body:position, orbitTangent(ves)):normalized.
 }
 
+// Perpendicular to both tangent and binormal, typically radially inward
 function orbitNormal {
-    return vcrs(orbitBinormal(), orbitTangent()):normalized.
+    parameter ves is ship.
+
+    return vcrs(orbitBinormal(ves), orbitTangent(ves)):normalized.
 }
 
+// Vector pointing in the direction of longitude of ascending node
 function orbitLAN {
-    return angleAxis(orbit:LAN, body:angularVel) * solarPrimeVector.
+    parameter ves is ship.
+
+    return angleAxis(ves:orbit:LAN, ves:body:angularVel) * solarPrimeVector.
 }
 
+// Same as surface prograde vector for ves
 function surfaceTangent {
-    return ship:velocity:surface:normalized.
+    parameter ves is ship.
+
+    return ves:velocity:surface:normalized.
 }
 
+// In the direction of surface angular momentum of ves
 function surfaceBinormal {
-    return vcrs(-body:position, surfaceTangent()):normalized.
+    parameter ves is ship.
+
+    return vcrs(ves:position - ves:body:position, surfaceTangent(ves)):normalized.
 }
 
+// Perpedicular to  both tangent and binormal, typically radially inward
 function surfaceNormal {
-    return vcrs(surfaceBinormal(), surfaceTangent()):normalized.
+    parameter ves is ship.
+
+    return vcrs(surfaceBinormal(ves), surfaceTangent(ves)):normalized.
 }
 
+// Vector pointing in the direction of longitude of ascending node
 function surfaceLAN {
-    return angleAxis(orbit:LAN - 90, body:angularVel) * solarPrimeVector.
+    parameter ves is ship.
+
+    return angleAxis(ves:orbit:LAN - 90, ves:body:angularVel) * solarPrimeVector.
 }
 
+// Vector directly away from the body at ves' position
 function localVertical {
-    return up:vector.
+    parameter ves is ship.
+
+    return ves:up:vector.
 }
 
 function pitchAngle {
@@ -56,25 +83,12 @@ function rollAngle {
     return vang(localVertical(), vxcl(tangent, ship:facing:starvector)) - 90.
 }
 
-function targetTangent {
-    return target:velocity:orbit:normalized.
-}
-
-function targetBinormal {
-    return vcrs(target:position - target:body:position, targetTangent()):normalized.
-}
-
-function targetNormal {
-    return vcrs(targetBinormal(), targetTangent()):normalized.
-}
-
-function targetLAN {
-    return angleAxis(target:orbit:LAN, target:body:angularVel) * solarPrimeVector.
-}
-
+// Angle to ascending node with respect to current body's equator
 function angleToBodyAscendingNode {
-    local angle is vang(-body:position, orbitLAN()).
-    if ship:status = "LANDED" {
+    parameter ves is ship.
+
+    local angle is vang(ves:position - ves:body:position, orbitLAN(ves)).
+    if ves:status = "LANDED" {
         return angle - 90.
     }
     else {
@@ -82,9 +96,12 @@ function angleToBodyAscendingNode {
     }
 }
 
+// Angle to descending node with respect to current body's equator
 function angleToBodyDescendingNode {
-    local angle is vang(-body:position, -orbitLAN()).
-    if ship:status = "LANDED" {
+    parameter ves is ship.
+
+    local angle is vang(ves:position - ves:body:position, -orbitLAN(ves)).
+    if ves:status = "LANDED" {
         return angle - 90.
     }
     else {
@@ -92,6 +109,7 @@ function angleToBodyDescendingNode {
     }
 }
 
+// Angle to relative ascending node with assumed target
 function angleToRelativeAscendingNode {
     parameter orbitBinormal.
     parameter targetBinormal.
@@ -100,6 +118,7 @@ function angleToRelativeAscendingNode {
     return vang(-body:position, joinVector).
 }
 
+// Angle to relative descending node with assumed target
 function angleToRelativeDescendingNode {
     parameter orbitBinormal.
     parameter targetBinormal.
@@ -108,6 +127,8 @@ function angleToRelativeDescendingNode {
     return vang(-body:position, joinVector).
 }
 
+// Orbital phase angle with assumed target
+// Positive when you are behind the target, negative when ahead
 function phaseAngle {
     local common_ancestor is 0.
     local my_ancestors is list().
@@ -155,6 +176,7 @@ function phaseAngle {
     }
 }
 
+// Instantaneous heading to go from current postion to a final position along the geodesic
 function greatCircleHeading {
     parameter point.    // Should be GeoCoordinates, a waypoint or a vessel
     local spot is point.
@@ -169,4 +191,50 @@ function greatCircleHeading {
     local headD is cos(ship:latitude) * sin(spot:lat) - sin(ship:latitude) * cos(spot:lat) * cos(spot:lng - ship:longitude).
     local head is mod(arctan2(headN, headD) + 360, 360).
     return head.
+}
+
+// Burn time from rocket equation
+function burnTime {
+    parameter deltaV.
+    
+    if deltaV:typename() = "Vector" {
+        set deltaV to deltaV:mag.
+    }
+    local burnEngines is list().
+    list engines in burnEngines.
+    local massBurnRate is 0.
+    local g0 is 9.80665.
+    for e in burnEngines {
+        if e:ignition {
+            set massBurnRate to massBurnRate + e:availableThrust/(e:ISP * g0).
+        }
+    }
+    local isp is ship:availablethrust / massBurnRate.
+    
+    local burnTime is ship:mass * (1 - CONSTANT:E ^ (-deltaV / isp)) / massBurnRate.
+    return burnTime.
+}
+
+// Instantaneous azimuth
+function azimuth {
+    parameter inclination.
+    parameter orbit_alt.
+
+    if inclination < ship:latitude {
+        print "Cannot launch to this inclination, too low.".
+        return false.
+    }
+
+    local head is arcsin(cos(inclination) / cos(ship:latitude)).
+    if inclination < 0 {
+        set head to 180 - head.
+    }
+    else if not(ship:status = "LANDED") and angleToBodyDescendingNode(ship) < angleToBodyAscendingNode(ship) {
+        set head to 180 - head.
+    }
+    local vOrbit is sqrt(body:mu / (orbit_alt + body:radius)).
+    local vRotX is vOrbit * sin(head) - vdot(ship:velocity:orbit, heading(90, 0):vector).
+    local vRotY is vOrbit * cos(head) - vdot(ship:velocity:orbit, heading(0, 0):vector).
+    set head to 90 - arctan2(vRotY, vRotX).
+    return mod(head + 360, 360).
 }
