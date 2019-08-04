@@ -194,7 +194,7 @@ function greatCircleHeading {
 }
 
 // Burn time from rocket equation
-function burnTime {
+function getBurnTime {
     parameter deltaV.
     
     if deltaV:typename() = "Vector" {

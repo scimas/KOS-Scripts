@@ -3,14 +3,13 @@
 parameter point is 0.
 
 clearscreen.
-runOncePath("lib_navigation.ks").
+runOncePath("library/lib_navigation.ks").
 
 local guiding is FALSE.
 local handlePitch is FALSE.
 local handleRoll is FALSE.
 local quit is FALSE.
 
-local wp is 0.
 local change is 0.
 
 local rollPID is pidLoop(

@@ -3,9 +3,9 @@
 // Can be launched to a target vessel orbit
 @lazyglobal off.
 
-runOncePath("lib_manoeuvre.ks").
-runOncePath("lib_navigation.ks").
-runOncePath("lib_utilities.ks").
+runOncePath("library/lib_manoeuvre.ks").
+runOncePath("library/lib_navigation.ks").
+runOncePath("library/lib_utilities.ks").
 
 function verticalAscent {
     parameter launch_params is lexicon(
@@ -26,24 +26,41 @@ function gravityTurn {
         "maintain_twr", 0
     ).
 
-    lock twrScale to 1.
-    if launch_params["maintain_twr"] <> 0 {
-        lock twrScale to launch_params["maintain_twr"] / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / (BODY:RADIUS + SHIP:ALTITUDE) ^ 2)).
-    }
+    local twrScale is 1.
     lock THROTTLE to min(twrScale, 1).
-
+    
     local turnParameter is BODY:ATM:HEIGHT * 0.7.
     lock STEERING to HEADING(
         launch_params["target_heading"]:call(),
         ((90 / turnParameter^4) * (turnParameter - SHIP:ALTITUDE)^4 + (90 / turnParameter^0.5) * (turnParameter - SHIP:ALTITUDE)^0.5)/2
     ).
-    wait until SHIP:ALTITUDE > turnParameter - 100 or SHIP:APOAPSIS > launch_params["target_altitude"].
+    until SHIP:ALTITUDE > turnParameter - 100 or SHIP:APOAPSIS > launch_params["target_altitude"] {
+        if launch_params["maintain_twr"] <> 0 {
+            if ship:availableThrust <> 0 {
+                set twrScale to launch_params["maintain_twr"] / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / (BODY:RADIUS + SHIP:ALTITUDE) ^ 2)).
+            }
+            else {
+                set twrScale to 1.
+            }
+        }
+        print launch_params["target_heading"]:call() at (0, 20).
+        wait 0.
+    }
 
     lock STEERING to  HEADING(launch_params["target_heading"]:call(), 0).
-    wait until SHIP:APOAPSIS > launch_params["target_altitude"].
+    until SHIP:APOAPSIS > launch_params["target_altitude"] {
+        if launch_params["maintain_twr"] <> 0 {
+            if ship:availableThrust <> 0 {
+                set twrScale to launch_params["maintain_twr"] / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / (BODY:RADIUS + SHIP:ALTITUDE) ^ 2)).
+            }
+            else {
+                set twrScale to 1.
+            }
+        }
+        wait 0.
+    }
     
     lock THROTTLE to 0.
-    unlock twrScale.
 }
 
 function atmosphereExit {

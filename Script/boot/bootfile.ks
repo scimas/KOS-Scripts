@@ -15,26 +15,32 @@ if not HOMECONNECTION:ISCONNECTED {
     wait until HOMECONNECTION:ISCONNECTED.
 }
 
-copyPath("0:/library/lib_manoeuvre.ks", "").
-copyPath("0:/library/lib_navigation.ks", "").
-copyPath("0:/library/lib_utilities.ks", "").
+if not(exists("/library")) {
+    createDir("/library").
+}
+copyPath("0:/library/lib_manoeuvre.ks", "library/").
+copyPath("0:/library/lib_navigation.ks", "library/").
+copyPath("0:/library/lib_utilities.ks", "library/").
+copyPath("0:/library/lib_math.ks", "library/").
 
-local updatefile is "0:/boot/update_" + SHIP:NAME + "_" + CORE:TAG + ".ks".
-print "Looking for".
-print updatefile.
-if exists(updatefile) {
-    copyPath(updatefile, "update.ks").
-    deletePath(updatefile).
-}
+print "Files copied.".
 
-if exists("update.ks") {
-    print "Found update file".
-    print "Running new instructions".
-    runPath("update.ks").
-    print "New instructions executed, exiting".
-    deletePath("update.ks").
-}
-else {
-    print "No new instructions found".
-    print "Exiting".
-}
+// local updatefile is "0:/boot/update_" + SHIP:NAME + "_" + CORE:TAG + ".ks".
+// print "Looking for".
+// print updatefile.
+// if exists(updatefile) {
+//     copyPath(updatefile, "update.ks").
+//     deletePath(updatefile).
+// }
+
+// if exists("update.ks") {
+//     print "Found update file".
+//     print "Running new instructions".
+//     runPath("update.ks").
+//     print "New instructions executed, exiting".
+//     deletePath("update.ks").
+// }
+// else {
+//     print "No new instructions found".
+//     print "Exiting".
+// }
