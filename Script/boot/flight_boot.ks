@@ -20,7 +20,7 @@ if not(exists("/library")) {
     createDir("/library").
 }
 copyPath("0:/library/lib_navigation.ks", "library/").
-copyPath("0:/flight_assist.ks", "library/").
+copyPath("0:/flight_assist.ks", "").
 
 print "Flight Assist system ready for activation.".
 // print "Enter waypoint name (or 0)".
