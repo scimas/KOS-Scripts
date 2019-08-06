@@ -226,6 +226,7 @@ function getBurnTime {
 function azimuth {
     parameter inclination.
     parameter orbit_alt.
+    parameter auto_switch is false.
 
     if inclination < ship:latitude {
         print "Cannot launch to this inclination, too low.".
@@ -233,10 +234,12 @@ function azimuth {
     }
 
     local head is arcsin(cos(inclination) / cos(ship:latitude)).
-    if inclination < 0 {
-        set head to 180 - head.
+    if auto_switch {
+        if angleToBodyDescendingNode(ship) < angleToBodyAscendingNode(ship) {
+            set head to 180 - head.
+        }
     }
-    else if not(ship:status = "LANDED") and angleToBodyDescendingNode(ship) < angleToBodyAscendingNode(ship) {
+    else if inclination < 0 {
         set head to 180 - head.
     }
     local vOrbit is sqrt(body:mu / (orbit_alt + body:radius)).
