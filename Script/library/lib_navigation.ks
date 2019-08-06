@@ -83,7 +83,7 @@ function rollAngle {
     return vang(localVertical(), vxcl(tangent, ship:facing:starvector)) - 90.
 }
 
-// Angle to ascending node with respect to current body's equator
+// Angle to ascending node with respect to ves' body's equator
 function angleToBodyAscendingNode {
     parameter ves is ship.
 
@@ -96,7 +96,7 @@ function angleToBodyAscendingNode {
     }
 }
 
-// Angle to descending node with respect to current body's equator
+// Angle to descending node with respect to ves' body's equator
 function angleToBodyDescendingNode {
     parameter ves is ship.
 
@@ -109,7 +109,7 @@ function angleToBodyDescendingNode {
     }
 }
 
-// Angle to relative ascending node with assumed target
+// Angle to relative ascending node determined from args
 function angleToRelativeAscendingNode {
     parameter orbitBinormal.
     parameter targetBinormal.
@@ -118,7 +118,7 @@ function angleToRelativeAscendingNode {
     return vang(-body:position, joinVector).
 }
 
-// Angle to relative descending node with assumed target
+// Angle to relative descending node determined from args
 function angleToRelativeDescendingNode {
     parameter orbitBinormal.
     parameter targetBinormal.
