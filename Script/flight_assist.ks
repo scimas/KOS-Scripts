@@ -30,39 +30,96 @@ local pitchPID is pidLoop(
 ).
 set pitchPID:setpoint to SHIP:verticalSpeed.
 
-on AG6 {
-    if guiding {
-        set guiding to FALSE.
-    }
-    else if point <> 0 {
-        set guiding to TRUE.
-    }
-    return TRUE.
-}
+local window is gui(300).
+local control_layout is window:addhlayout().
+local pitch_box is control_layout:addvbox().
+local pitch_label is pitch_box:addlabel("Vert Speed").
+local pitch_values is pitch_box:addhlayout().
+local pitch_value is pitch_values:addlabel("0").
+local pitch_change is pitch_values:addtextfield("0").
+local pitch_button is pitch_box:addbutton("Turn On").
+local pitch_update is pitch_box:addbutton("Update").
+local roll_box is control_layout:addvbox().
+local roll_label is roll_box:addlabel("Roll Angle").
+local roll_values is roll_box:addhlayout().
+local roll_value is roll_values:addlabel("0").
+local roll_change is roll_values:addtextfield("0").
+local roll_button is roll_box:addbutton("Turn On").
+local roll_update is roll_box:addbutton("Update").
+local nav_box is window:addvbox().
+local waylist is nav_box:addpopupmenu().
+local head_label is nav_box:addlabel("Heading").
+local head_value is nav_box:addlabel("-").
+local head_button is nav_box:addbutton("Turn On").
 
-on AG7 {
+for wp in allWaypoints() {
+    waylist:addoption(wp).
+}
+set waylist:maxvisible to 5.
+window:show().
+
+function pitch_button_function {
     if handlePitch {
-        set handlePitch to FALSE.
+        set pitch_button:text to "Turn On".
         pitchPID:reset().
         set ship:control:neutralize to TRUE.
     }
     else {
-        set handlePitch to TRUE.
+        set pitch_button:text to "Turn Off".
         set pitchPID:setpoint to round(ship:verticalSpeed, 0).
     }
-    return TRUE.
+    set handlePitch to not(handlePitch).
 }
-
-on AG9 {
+function pitch_update_function {
+    set pitchPID:setpoint to pitch_change:text:toscalar().
+}
+function roll_button_function {
     if handleRoll {
-        set handleRoll to FALSE.
+        set roll_button:text to "Turn On".
         rollPID:reset().
         set ship:control:neutralize to TRUE.
     }
     else {
-        set handleRoll to TRUE.
+        set roll_button:text to "Turn Off".
         set rollPID:setpoint to round(rollAngle(), 0).
     }
+    set handleRoll to not(handleRoll).
+}
+function roll_update_function {
+    set rollPID:setpoint to roll_change:text:toscalar().
+}
+function head_button_function {
+    if guiding {
+        set head_button:text to "Turn On".
+    }
+    else {
+        set head_button:text to "Turn Off".
+    }
+    set guiding to not(guiding).
+}
+function waylist_function {
+    parameter wp.
+    set point to wp.
+}
+set pitch_button:onclick to pitch_button_function@.
+set pitch_update:onclick to pitch_update_function@.
+set roll_button:onclick to roll_button_function@.
+set roll_update:onclick to roll_update_function@.
+set head_button:onclick to head_button_function@.
+set waylist:onchange to waylist_function@.
+
+on AG6 {
+    head_button_function().
+    return TRUE.
+}
+
+on AG7 {
+    pitch_button_function().
+    return TRUE.
+}
+
+on AG9 {
+    roll_button_function().
     return TRUE.
 }
 
@@ -70,23 +127,14 @@ on AG10 {
     set quit to TRUE.
 }
 
-print "Pitch" at (0, 0).
-print "Roll" at (14, 0).
 local head is 0.
+
 until quit {
     if handlePitch {
         set ship:control:pitch to pitchPID:update(time:seconds, ship:verticalSpeed).
-        print "On " at (0, 4).
-    }
-    else {
-        print "Off" at (0, 4).
     }
     if handleRoll {
         set ship:control:roll to rollPID:update(time:seconds, rollAngle()).
-        print "On " at (14, 4).
-    }
-    else {
-        print "Off" at (14, 4).
     }
     if guiding {
         set head to greatCircleHeading(point).
@@ -98,21 +146,27 @@ until quit {
         set change to terminal:input:getchar().
         if change = "w" {
             set pitchPID:setpoint to pitchPID:setpoint - 1.
+            set pitch_change:text to pitchPID:setpoint:tostring().
         }
         else if change = "s" {
             set pitchPID:setpoint to pitchPID:setpoint + 1.
+            set pitch_change:text to pitchPID:setpoint:tostring().
         }
         else if change = "x" {
             set pitchPID:setpoint to 0.
+            set pitch_change:text to "0".
         }
         else if change = "q" {
             set rollPID:setpoint to rollPID:setpoint - 1.
+            set roll_change:text to rollPID:setpoint:tostring().
         }
         else if change = "e" {
             set rollPID:setpoint to rollPID:setpoint + 1.
+            set roll_change:text to rollPID:setpoint:tostring().
         }
         else if change = "r" {
             set rollPID:setpoint to 0.
+            set roll_change:text to "0".
         }
         else if change = "b" {
             toggle BRAKES.
@@ -130,12 +184,12 @@ until quit {
             toggle AG9.
         }
     }
-    print round(ship:verticalSpeed, 3) at (0, 1).
-    print round(pitchPID:output, 3) at (0, 2).
-    print round(rollAngle(), 3) at (14, 1).
-    print round(rollPID:output, 3) at (14, 2).
-    print "Heading " + head at (0, 5).
+    set pitch_value:text to round(ship:verticalspeed):tostring().
+    set roll_value:text to round(rollAngle(), 3):tostring().
+    set head_value:text to round(head, 0):tostring().
     wait 0.
 }
 
 set ship:control:neutralize to TRUE.
+window:hide().
+window:dispose().
