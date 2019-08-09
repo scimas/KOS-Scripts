@@ -6,8 +6,8 @@
 wait until ship:unpacked and ship:loaded.
 core:doaction("open terminal", true).
 
-local flist is list().
-list FILES in flist.
+// local flist is list().
+// list FILES in flist.
 
 print "Checking for connection to KSC.".
 if not HOMECONNECTION:ISCONNECTED {
