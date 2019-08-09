@@ -43,7 +43,6 @@ function gravityTurn {
                 set twrScale to 1.
             }
         }
-        print launch_params["target_heading"]:call() at (0, 20).
         wait 0.
     }
 
@@ -90,7 +89,7 @@ function circularize {
 
 function launch {
     parameter targetAltitude is 80000.
-    parameter targetInclination is SHIP:LATITUDE.
+    parameter targetInclination is ship:latitude.
     parameter turnStartSpeed is 60.
     parameter maintainTWR is 0.
     parameter targetLAN is MOD(ORBIT:LAN + 90, 360).
