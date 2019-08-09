@@ -194,9 +194,7 @@ function greatCircleHeading {
         return -1.
     }
     
-    local headN is cos(spot:lat) * sin(spot:lng - ship:longitude).
-    local headD is cos(ship:latitude) * sin(spot:lat) - sin(ship:latitude) * cos(spot:lat) * cos(spot:lng - ship:longitude).
-    local head is mod(arctan2(headN, headD) + 360, 360).
+    local head is spot:heading.
     return head.
 }
 
@@ -228,9 +226,8 @@ function azimuth {
     parameter orbit_alt.
     parameter auto_switch is false.
 
-    if inclination < ship:latitude {
-        print "Cannot launch to this inclination, too low.".
-        return false.
+    if abs(inclination) < abs(ship:latitude) {
+        set inclination to ship:latitude.
     }
 
     local head is arcsin(cos(inclination) / cos(ship:latitude)).
