@@ -1,5 +1,5 @@
+.vscode
 Script/boot/*
 !Script/boot/bootfile.ks
 !Script/boot/flight_boot.ks
-.vscode
-
+Scripts/scripts
