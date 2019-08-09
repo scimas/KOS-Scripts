@@ -2,4 +2,4 @@
 Script/boot/*
 !Script/boot/bootfile.ks
 !Script/boot/flight_boot.ks
-Scripts/scripts
+Script/scripts
