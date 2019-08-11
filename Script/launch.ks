@@ -34,7 +34,7 @@ function gravityTurn {
         launch_params["target_heading"]:call(),
         ((90 / turnParameter^4) * (turnParameter - SHIP:ALTITUDE)^4 + (90 / turnParameter^0.5) * (turnParameter - SHIP:ALTITUDE)^0.5)/2
     ).
-    until SHIP:ALTITUDE > turnParameter - 100 or SHIP:APOAPSIS > launch_params["target_altitude"] {
+    until SHIP:ALTITUDE > turnParameter - 500 or SHIP:APOAPSIS > launch_params["target_altitude"] {
         if launch_params["maintain_twr"] <> 0 {
             if ship:availableThrust <> 0 {
                 set twrScale to launch_params["maintain_twr"] / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / (BODY:RADIUS + SHIP:ALTITUDE) ^ 2)).
@@ -92,14 +92,12 @@ function launch {
     parameter targetInclination is ship:latitude.
     parameter turnStartSpeed is 60.
     parameter maintainTWR is 0.
-    parameter targetLAN is MOD(ORBIT:LAN + 90, 360).
     
     local launch_params is lexicon(
         "target_altitude", targetAltitude,
         "target_inclination", targetInclination,
         "turn_start_speed", turnStartSpeed,
-        "maintain_twr", maintainTWR,
-        "target_lan", targetLAN
+        "maintain_twr", maintainTWR
     ).
 
     local stageControl is FALSE.

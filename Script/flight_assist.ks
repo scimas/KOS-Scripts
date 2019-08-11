@@ -202,8 +202,6 @@ until quit {
     if handleThrottle {
         set throttlePID:setpoint to accelerationPID:update(time:seconds, ship:velocity:surface:mag).
         set ship:control:mainthrottle to throttlePID:update(time:seconds, accelerationPID:changerate).
-        // print round(throttlePID:input, 2) + "    " + round(throttlePID:setpoint) + "    " + round(throttlePID:output, 2).
-        // print round(accelerationPID:input) + "    " + round(accelerationPID:setpoint) + "    " + round(accelerationPID:output, 2).
     }
     if guiding {
         set head to greatCircleHeading(point).
