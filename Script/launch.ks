@@ -16,7 +16,10 @@ function verticalAscent {
     lock STEERING to HEADING(launch_params["target_heading"]:call(), 90).
     lock THROTTLE to 1.
 
-    wait until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"].
+    // wait until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"].
+    until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"] {
+        print time:seconds + "  " + ship:velocity:surface:mag at (0, 10).
+    }
 }
 
 function gravityTurn {
@@ -100,19 +103,18 @@ function launch {
         "maintain_twr", maintainTWR
     ).
 
-    local stageControl is FALSE.
+    local stageControl is false.
+    local launch_complete is false.
 
-    when STAGE:NUMBER > 0 and stageControl = TRUE then {
-        if needsStaging() {
-            wait 0.5.
-            STAGE.
-            wait until STAGE:READY.
-        }
-        if STAGE:NUMBER = 0 {
-            return FALSE.
+    when ship:maxthrust = 0 and stage:number > 0 and stageControl then {
+        wait until stage:ready.
+        stage.
+        wait until stage:ready.
+        if stage:number = 0 or launch_complete {
+            return false.
         }
         else {
-            return TRUE.
+            return true.
         }
     }
 
@@ -120,7 +122,7 @@ function launch {
     kuniverse:timewarp:cancelWarp().
     print "Launching now".
 
-    set stageControl to TRUE.
+    set stageControl to true.
     if SHIP:AVAILABLETHRUST = 0 {
         STAGE.
     }
@@ -141,12 +143,13 @@ function launch {
     circularize().
     print "Entered orbit".
 
-    set stageControl to FALSE.
+    set stageControl to false.
     lock THROTTLE to 0.
     unlock STEERING.
     unlock THROTTLE.
 
     print "Launch complete".
+    set launch_complete to true.
 }
 
 function primitive_launch {
@@ -154,19 +157,19 @@ function primitive_launch {
     parameter targetHeading is 90.
     parameter turnStartSpeed is 60.
     
-    local stageControl is FALSE.
+    local stageControl is false.
 
-    when STAGE:NUMBER > 0 and stageControl = TRUE then {
+    when STAGE:NUMBER > 0 and stageControl = true then {
         if needsStaging() {
             wait 0.5.
             STAGE.
             wait until STAGE:READY.
         }
         if STAGE:NUMBER = 0 {
-            return FALSE.
+            return false.
         }
         else {
-            return TRUE.
+            return true.
         }
     }
 
@@ -174,7 +177,7 @@ function primitive_launch {
     wait 2.
     print "Launching now".
 
-    set stageControl to TRUE.
+    set stageControl to true.
     if SHIP:AVAILABLETHRUST = 0 {
         STAGE.
     }
@@ -220,7 +223,7 @@ function primitive_launch {
     circularize().
     print "Entered orbit".
 
-    set stageControl to FALSE.
+    set stageControl to false.
     lock THROTTLE to 0.
     unlock STEERING.
     unlock THROTTLE.
