@@ -49,7 +49,7 @@ function RK4 {
             set k4[i] to sim_init[variables[i]]:call(t + h, midpoint).
         }
         from {local i is 0.} until i = num_variables step {set i to i + 1.} do {
-            set v[i] to v[i] + (k1[i] + 2 * (k2[i] + k3[i]) + k4[i]) / 6.
+            set v[i] to v[i] + (k1[i] + 2 * (k2[i] + k3[i]) + k4[i]) * h/6.
         }
         set t to t + h.
     }
