@@ -16,10 +16,7 @@ function verticalAscent {
     lock STEERING to HEADING(launch_params["target_heading"]:call(), 90).
     lock THROTTLE to 1.
 
-    // wait until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"].
-    until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"] {
-        print time:seconds + "  " + ship:velocity:surface:mag at (0, 10).
-    }
+    wait until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"].
 }
 
 function gravityTurn {
@@ -46,7 +43,6 @@ function gravityTurn {
                 set twrScale to 1.
             }
         }
-        wait 0.
     }
 
     lock STEERING to  HEADING(launch_params["target_heading"]:call(), 0).
@@ -59,7 +55,6 @@ function gravityTurn {
                 set twrScale to 1.
             }
         }
-        wait 0.
     }
     
     lock THROTTLE to 0.
@@ -106,11 +101,13 @@ function launch {
     local stageControl is false.
     local launch_complete is false.
 
-    when ship:maxthrust = 0 and stage:number > 0 and stageControl then {
+    local last_maxthrust is 0.
+    when ship:maxthrustat(0) <> last_maxthrust and stage:number > 0 and stageControl then {
         wait until stage:ready.
         stage.
         wait until stage:ready.
-        if stage:number = 0 or launch_complete {
+        set last_maxthrust to ship:maxthrustat(0).
+        if launch_complete or stage:number = 0 {
             return false.
         }
         else {
@@ -122,9 +119,11 @@ function launch {
     kuniverse:timewarp:cancelWarp().
     print "Launching now".
 
-    set stageControl to true.
     if SHIP:AVAILABLETHRUST = 0 {
         STAGE.
+        wait until stage:ready.
+        set last_maxthrust to ship:maxthrustat(0).
+        set stageControl to true.
     }
 
     print "Starting vertical ascent".
