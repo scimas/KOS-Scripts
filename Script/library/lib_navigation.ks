@@ -198,25 +198,39 @@ function greatCircleHeading {
     return head.
 }
 
-// Burn time from rocket equation
-function getBurnTime {
-    parameter deltaV.
-    
-    if deltaV:typename() = "Vector" {
-        set deltaV to deltaV:mag.
-    }
+// Average Isp calculation
+function _avg_isp {
     local burnEngines is list().
     list engines in burnEngines.
     local massBurnRate is 0.
-    local g0 is 9.80665.
     for e in burnEngines {
         if e:ignition {
-            set massBurnRate to massBurnRate + e:availableThrust/(e:ISP * g0).
+            set massBurnRate to massBurnRate + e:availableThrust/(e:ISP * constant:g0).
         }
     }
-    local isp is ship:availablethrust / massBurnRate.
+    local isp is -1.
+    if massBurnRate <> 0 {
+        set isp to ship:availablethrust / massBurnRate.
+    }
+    return isp.
+}
+
+// Burn time from rocket equation
+function getBurnTime {
+    parameter deltaV.
+    parameter isp is 0.
+
+    if deltaV:typename() = "Vector" {
+        set deltaV to deltaV:mag.
+    }
+     if isp = 0 {
+        set isp to _avg_isp().
+    }
     
-    local burnTime is ship:mass * (1 - CONSTANT:E ^ (-deltaV / isp)) / massBurnRate.
+    local burnTime is -1.
+    if ship:availablethrust <> 0 {
+        set burnTime to ship:mass * (1 - CONSTANT:E ^ (-deltaV / isp)) / (ship:availablethrust / isp).
+    }
     return burnTime.
 }
 
@@ -244,4 +258,11 @@ function azimuth {
     local vRotY is vOrbit * cos(head) - vdot(ship:velocity:orbit, heading(0, 0):vector).
     set head to 90 - arctan2(vRotY, vRotX).
     return mod(head + 360, 360).
+}
+
+// Gravitational acceleration here
+function g {
+    parameter pos is body:position.
+
+    return body:mu/pos:sqrmagnitude * pos:normalized.
 }
