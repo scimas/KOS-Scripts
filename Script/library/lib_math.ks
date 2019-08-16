@@ -30,15 +30,16 @@ function RK4 {
     for i in range(num_variables) {
         set midpoint[i] to v[i] + k1[i] * halfstep.
     }
-    local k2 is sim_init["derivatives"]:call(t0 + halfstep, midpoint).
+    set t0 to t0 + halfstep.
+    local k2 is sim_init["derivatives"]:call(t0, midpoint).
     for i in range(num_variables) {
         set midpoint[i] to v[i] + k2[i] * halfstep.
     }
-    local k3 is sim_init["derivatives"]:call(t0 + halfstep, midpoint).
+    local k3 is sim_init["derivatives"]:call(t0, midpoint).
     for i in range(num_variables) {
         set midpoint[i] to v[i] + k3[i] * step.
     }
-    local k4 is sim_init["derivatives"]:call(t0 + step, midpoint).
+    local k4 is sim_init["derivatives"]:call(t0 + halfstep, midpoint).
     for i in range(num_variables) {
         set v[i] to v[i] + (k1[i] + 2 * (k2[i] + k3[i]) + k4[i]) * sixthstep.
     }
