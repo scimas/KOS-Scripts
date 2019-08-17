@@ -1,4 +1,5 @@
 @lazyglobal off.
+parameter end_altitude is 20, sim_throttle is 0.8, step is 0.4.
 
 clearscreen.
 runoncepath("/library/lib_math.ks").
@@ -13,8 +14,8 @@ local throttlePID is pidloop(
     0.01,
     0,
     0.001,
-    -0.2,
-    0.2
+    sim_throttle - 1,
+    1 - sim_throttle
 ).
 set throttlePID:setpoint to 0.
 
@@ -26,13 +27,12 @@ function derivs {
     local dv is g(-rv[0]) -
     vcrs(body:angularvel, vcrs(body:angularvel, rv[0])) -
     2 * vcrs(body:angularvel, rv[1]) -
-    ship:availablethrust*0.8 / rv[2] * rv[1]:normalized.
-    local dm is -ship:availablethrust*0.8 / isp.
+    ship:availablethrust*sim_throttle / rv[2] * rv[1]:normalized.
+    local dm is -ship:availablethrust*sim_throttle / isp.
 
     return list(dr, dv, dm).
 }
 
-local step is 0.4.
 local result is list(-body:position, ship:velocity:surface, ship:mass).
 clearvecdraws().
 local prediction is vecdraw(V(0,0,0), { return result[0] + body:position. }, red, "Final Position", 1, true, 0.5).
@@ -77,8 +77,9 @@ until agl:call() < ship:groundspeed or quit {
 set step to step/2.
 set sim_params["step"] to step.
 local thr is 0.
-lock throttle to 0.8 + thr.
-until alt:radar < 20 {
+lock throttle to sim_throttle + thr.
+until alt:radar < end_altitude or quit {
+    set line to 0.
     local t is time:seconds.
     local ti is t.
     set result to list(-body:position, ship:velocity:surface, ship:mass).
@@ -90,21 +91,26 @@ until alt:radar < 20 {
         set sim_params["init"] to result.
         set t to t + step.
     }
-    set line to 0.
-    set col to 17.
+    set col to 14.
     print round(t - ti, 1) + " s" at (col, line).
-    set line to 1.
+    set line to line + 1.
     set col to 5.
     print round(agl:call(), 2) + " m" at (col, line).
-    set thr to throttlePID:update(time:seconds, agl:call() - 20).
+    set line to line + 1.
+    set col to 17.
+    print round(time:seconds - ti, 2) + " s" at (col, line).
+    set thr to throttlePID:update(time:seconds, agl:call() - end_altitude).
 }
-lock steering to up.
-set thr to 0.2.
-wait until ship:velocity:surface:mag < 1.5.
-lock throttle to ship:mass * g():mag / ship:availablethrust.
-wait until ship:status = "LANDED".
-lock throttle to 0.
-wait 10.
+if not quit {
+    local updir is ship:facing:topvector.
+    lock steering to lookdirup(up:vector, updir).
+    set thr to 1 - sim_throttle.
+    wait until ship:velocity:surface:mag < 1.5.
+    lock throttle to ship:mass * g():mag / ship:availablethrust.
+    wait until ship:status = "LANDED".
+    lock throttle to 0.
+    wait 10.
+}
 unlock steering.
 unlock throttle.
 clearvecdraws().
