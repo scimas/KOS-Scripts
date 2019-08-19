@@ -63,24 +63,27 @@ function localVertical {
     return ves:up:vector.
 }
 
+function localHorizontal {
+    parameter ves is ship.
+
+    local tangent is orbitTangent(ves).
+    if ves:body:atm:exists and ves:altitude < ves:body:atm:height {
+        set tangent to surfaceTangent(ves).
+    }
+
+    return vxcl(localVertical(), tangent):normalized.
+}
+
 function pitchAngle {
     return 90 - vang(ship:facing:vector, localVertical()).
 }
 
 function yawAngle {
-    local tangent is orbitTangent().
-    if body:atm:exists and ship:altitude < body:atm:height {
-        set tangent to surfaceTangent().
-    }
-    return vang(vxcl(localVertical(), ship:facing:vector), tangent).
+    return vang(localHorizontal(), vxcl(localVertical(), ship:facing:starvector)) - 90.
 }
 
 function rollAngle {
-    local tangent is orbitTangent().
-    if body:atm:exists and ship:altitude < body:atm:height {
-        set tangent to surfaceTangent().
-    }
-    return vang(localVertical(), vxcl(tangent, ship:facing:starvector)) - 90.
+    return vang(localVertical(), vxcl(localHorizontal(), ship:facing:starvector)) - 90.
 }
 
 // Angle to ascending node with respect to ves' body's equator
