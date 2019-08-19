@@ -18,7 +18,7 @@ function RK4 {
     // Returns a list of the final values of the variables
     parameter sim_init is lexicon().
 
-    local t0 is sim_init["t0"].
+    local t0 is sim_init["t"].
     local step is sim_init["step"].
     local halfstep is step/2.
     local sixthstep is step/6.
