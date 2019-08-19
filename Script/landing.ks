@@ -1,5 +1,5 @@
 @lazyglobal off.
-parameter end_altitude is 20, sim_throttle is 0.8, step is 0.4.
+parameter end_altitude is 20, sim_throttle is 0.8, step is 2.
 
 clearscreen.
 runoncepath("/library/lib_math.ks").
@@ -56,9 +56,8 @@ until agl:call() < ship:groundspeed or quit {
     local ti is t.
     set result to list(-body:position, ship:velocity:surface, ship:mass).
     set sim_params["init"] to result.
-    set sim_params["t0"] to t.
     until result[1]:mag < 5 {
-        set sim_params["t0"] to t.
+        set sim_params["t"] to t.
         set result to RK4(sim_params).
         set sim_params["init"] to result.
         set t to t + step.
@@ -84,9 +83,8 @@ until alt:radar < end_altitude or quit {
     local ti is t.
     set result to list(-body:position, ship:velocity:surface, ship:mass).
     set sim_params["init"] to result.
-    set sim_params["t0"] to t.
     until result[1]:mag < 5 {
-        set sim_params["t0"] to t.
+        set sim_params["t"] to t.
         set result to RK4(sim_params).
         set sim_params["init"] to result.
         set t to t + step.
@@ -101,15 +99,28 @@ until alt:radar < end_altitude or quit {
     print round(time:seconds - ti, 2) + " s" at (col, line).
     set thr to throttlePID:update(time:seconds, agl:call() - end_altitude).
 }
+
+set thr to 1.
+lock throttle to thr.
+local dir is srfretrograde.
+lock steering to dir.
+until ship:status = "LANDED" or quit {
+    if ship:verticalspeed > 0 {
+        set dir to srfretrograde.
+        set thr to 0.
+    }
+    else if ship:verticalspeed < -1.5 or ship:groundspeed > 1.5 {
+        set dir to srfretrograde.
+        set thr to 1.
+    }
+    else {
+        set dir to lookdirup(up:vector, vxcl(up:vector, srfprograde:vector):normalized).
+        set thr to ship:mass * g():mag / ship:availablethrust.
+    }
+}
 if not quit {
-    local updir is ship:facing:topvector.
-    lock steering to lookdirup(up:vector, updir).
-    set thr to 1 - sim_throttle.
-    wait until ship:velocity:surface:mag < 1.5.
-    lock throttle to ship:mass * g():mag / ship:availablethrust.
-    wait until ship:status = "LANDED".
-    lock throttle to 0.
-    wait 10.
+    set thr to 0.
+    wait 5.
 }
 unlock steering.
 unlock throttle.
