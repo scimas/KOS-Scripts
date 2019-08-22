@@ -67,7 +67,7 @@ function localHorizontal {
     parameter ves is ship.
 
     local tangent is orbitTangent(ves).
-    if ves:body:atm:exists and ves:altitude < ves:body:atm:height {
+    if ves:status = "LANDED" or (ves:body:atm:exists and ves:altitude < ves:body:atm:height) {
         set tangent to surfaceTangent(ves).
     }
 
@@ -84,6 +84,15 @@ function yawAngle {
 
 function rollAngle {
     return vang(localVertical(), vxcl(localHorizontal(), ship:facing:starvector)) - 90.
+}
+
+function compassHeading {
+    local lh is localHorizontal().
+    local head is vang(lh, north:vector).
+    if vdot(vcrs(north:vector, lh), up:vector) < 0 {
+        set head to 360 - head.
+    }
+    return head.
 }
 
 // Angle to ascending node with respect to ves' body's equator
@@ -226,7 +235,7 @@ function getBurnTime {
     if deltaV:typename() = "Vector" {
         set deltaV to deltaV:mag.
     }
-     if isp = 0 {
+    if isp = 0 {
         set isp to _avg_isp().
     }
     
