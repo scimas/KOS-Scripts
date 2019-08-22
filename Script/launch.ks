@@ -120,6 +120,7 @@ function launch {
     print "Launching now".
 
     if SHIP:AVAILABLETHRUST = 0 {
+        lock throttle to 1.
         STAGE.
         wait until stage:ready.
         set last_maxthrust to ship:maxthrustat(0).
