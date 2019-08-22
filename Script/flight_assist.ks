@@ -9,6 +9,7 @@ local guiding is false.
 local handleThrottle is false.
 local handlePitch is false.
 local handleRoll is false.
+local handleYaw is false.
 local quit is false.
 
 local change is 0.
@@ -33,7 +34,7 @@ set pitchPID:setpoint to ship:verticalspeed.
 
 local accelerationPID is pidloop(
     0.7,
-    0,
+    0.001,
     0.01,
     -30,
     30
@@ -42,14 +43,23 @@ set accelerationPID:setpoint to 0.
 
 local throttlePID is pidloop(
     0.1,
-    0,
+    0.001,
     0.03,
     0.01,
     0.99
 ).
 set throttlePID:setpoint to 0.
 
-local width is 300.
+local yawPID is pidloop(
+    0.02,
+    0.005,
+    0.008,
+    -1,
+    1
+).
+set yawPID:setpoint to 0.
+
+local width is 400.
 local window is gui(width).
 local control_layout is window:addhlayout().
 local pitch_box is control_layout:addvbox().
@@ -66,6 +76,13 @@ local roll_value is roll_values:addlabel("0").
 local roll_change is roll_values:addtextfield("0").
 local roll_button is roll_box:addbutton("Turn On").
 local roll_update is roll_box:addbutton("Update").
+local yaw_box is control_layout:addvbox().
+local yaw_label is yaw_box:addlabel("Yaw Angle").
+local yaw_values is yaw_box:addhlayout().
+local yaw_value is yaw_values:addlabel("0").
+local yaw_change is yaw_values:addtextfield("0").
+local yaw_button is yaw_box:addbutton("Turn On").
+local yaw_update is yaw_box:addbutton("Update").
 local throttle_box is control_layout:addvbox().
 local throttle_label is throttle_box:addlabel("Speed").
 local throttle_values is throttle_box:addhlayout().
@@ -80,13 +97,16 @@ local head_value is nav_box:addlabel("-").
 local distance_value is nav_box:addlabel("-").
 local head_button is nav_box:addbutton("Turn On").
 
-set pitch_box:style:width to width/3.
+set pitch_box:style:width to width/4.
 set pitch_label:style:align to "LEFT".
 set pitch_value:style:align to "RIGHT".
-set roll_box:style:width to width/3.
+set roll_box:style:width to width/4.
 set roll_label:style:align to "LEFT".
 set roll_value:style:align to "RIGHT".
-set throttle_box:style:width to width/3.
+set yaw_box:style:width to width/4.
+set yaw_label:style:align to "LEFT".
+set yaw_value:style:align to "RIGHT".
+set throttle_box:style:width to width/4.
 set throttle_label:style:align to "LEFT".
 set throttle_value:style:align to "RIGHT".
 set head_label:style:align to "LEFT".
@@ -129,6 +149,21 @@ function roll_button_function {
 function roll_update_function {
     set rollPID:setpoint to roll_change:text:toscalar().
 }
+function yaw_button_function {
+    if handleYaw {
+        set yaw_button:text to "Turn On".
+        yawPID:reset().
+        set ship:control:neutralize to true.
+    }
+    else {
+        set yaw_button:text to "Turn Off".
+        set yawPID:setpoint to round(yawAngle()).
+    }
+    set handleYaw to not(handleYaw).
+}
+function yaw_update_function {
+    set yawPID:setpoint to yaw_change:text:toscalar().
+}
 function throttle_button_function {
     if handleThrottle {
         set throttle_button:text to "Turn On".
@@ -164,25 +199,31 @@ set pitch_button:onclick to pitch_button_function@.
 set pitch_update:onclick to pitch_update_function@.
 set roll_button:onclick to roll_button_function@.
 set roll_update:onclick to roll_update_function@.
+set yaw_button:onclick to yaw_button_function@.
+set yaw_update:onclick to yaw_update_function@.
 set throttle_button:onclick to throttle_button_function@.
 set throttle_update:onclick to throttle_update_function@.
 set head_button:onclick to head_button_function@.
 set waylist:onchange to waylist_function@.
 
-on AG6 {
+on AG5 {
     head_button_function().
     return true.
 }
-on AG7 {
+on AG6 {
     throttle_button_function().
     return true.
 }
-on AG8 {
+on AG7 {
     pitch_button_function().
     return true.
 }
-on AG9 {
+on AG8 {
     roll_button_function().
+    return true.
+}
+on AG9 {
+    yaw_button_function().
     return true.
 }
 on AG10 {
@@ -199,6 +240,9 @@ until quit {
     if handleRoll {
         set ship:control:roll to rollPID:update(time:seconds, rollAngle()).
     }
+    if handleYaw {
+        set ship:control:yaw to yawPID:update(time:seconds, yawAngle()).
+    }
     if handleThrottle {
         set throttlePID:setpoint to accelerationPID:update(time:seconds, ship:velocity:surface:mag).
         set ship:control:mainthrottle to throttlePID:update(time:seconds, accelerationPID:changerate).
@@ -207,7 +251,7 @@ until quit {
         set head to greatCircleHeading(point).
         set distance to point:geoposition:distance.
     }
-    if not (handlePitch or handleRoll or handleThrottle) {
+    if not (handlePitch or handleRoll or handleYaw or handleThrottle) {
         wait 0.25.
     }
     if terminal:input:haschar() {
@@ -236,23 +280,34 @@ until quit {
             set rollPID:setpoint to 0.
             set roll_change:text to "0".
         }
+        else if change = "a" {
+            set yawPID:setpoint to yawPID:setpoint - 1.
+            set yaw_change:text to yawPID:setpoint:tostring().
+        }
         else if change = "d" {
+            set yawPID:setpoint to yawPID:setpoint + 1.
+            set yaw_change:text to yawPID:setpoint:tostring().
+        }
+        else if change = "f" {
+            set yawPID:setpoint to 0.
+            set yaw_change:text to "0".
+        }
+        else if change = "n" {
             set accelerationPID:setpoint to accelerationPID:setpoint - 1.
             set throttle_change:text to round(accelerationPID:setpoint):tostring().
         }
-        else if change = "a" {
+        else if change = "h" {
             set accelerationPID:setpoint to accelerationPID:setpoint + 1.
             set throttle_change:text to round(accelerationPID:setpoint):tostring().
-        }
-        else if change = "z" {
-            set accelerationPID:setpoint to 0.
-            set throttle_change:text to "0".
         }
         else if change = "b" {
             toggle BRAKES.
         }
         else if change = "g" {
             toggle GEAR.
+        }
+        else if change = "5" {
+            toggle AG5.
         }
         else if change = "6" {
             toggle AG6.
