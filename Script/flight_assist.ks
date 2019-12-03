@@ -33,9 +33,9 @@ local pitchPID is pidloop(
 set pitchPID:setpoint to ship:verticalspeed.
 
 local accelerationPID is pidloop(
-    0.7,
-    0.001,
-    0.01,
+    0.5,
+    0.005,
+    0.03,
     -30,
     30
 ).
@@ -43,7 +43,7 @@ set accelerationPID:setpoint to 0.
 
 local throttlePID is pidloop(
     0.1,
-    0.001,
+    0.005,
     0.03,
     0.01,
     0.99
@@ -230,6 +230,11 @@ on AG10 {
     set quit to true.
 }
 
+print "Speed: AG6".
+print "Pitch: AG7".
+print "Roll:  AG8".
+print "Yaw:   AG9".
+
 local head is 0.
 local distance is 0.
 
@@ -302,6 +307,8 @@ until quit {
         }
         else if change = "b" {
             toggle BRAKES.
+            set accelerationPID:setpoint to 0.
+            set throttle_change:text to "0".
         }
         else if change = "g" {
             toggle GEAR.
