@@ -1,6 +1,5 @@
 // Script for launching a rocket
-// A target orbit can be achieved or
-// Can be launched to a target vessel orbit
+// A target orbit can be achieved
 @lazyglobal off.
 
 runOncePath("library/lib_manoeuvre.ks").
