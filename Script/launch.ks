@@ -9,14 +9,13 @@ runOncePath("library/lib_utilities.ks").
 
 function verticalAscent {
     parameter launch_params is lexicon(
-        "target_heading", { return 90. },
         "turn_start_speed", 80
     ).
 
-    lock STEERING to HEADING(launch_params["target_heading"]:call(), 90).
-    lock THROTTLE to 1.
+    lock steering to lookdirup(localVertical(), ship:facing:topvector).
+    lock throttle to 1.
 
-    wait until SHIP:VELOCITY:SURFACE:MAG > launch_params["turn_start_speed"].
+    wait until ship:velocity:surface:mag > launch_params["turn_start_speed"].
 }
 
 function gravityTurn {
@@ -27,17 +26,17 @@ function gravityTurn {
     ).
 
     local twrScale is 1.
-    lock THROTTLE to min(twrScale, 1).
+    lock throttle to min(twrScale, 1).
     
-    local turnParameter is BODY:ATM:HEIGHT * 0.7.
-    lock STEERING to HEADING(
+    local turnParameter is body:atm:height.
+    lock steering to heading(
         launch_params["target_heading"]:call(),
-        ((90 / turnParameter^4) * (turnParameter - SHIP:ALTITUDE)^4 + (90 / turnParameter^0.5) * (turnParameter - SHIP:ALTITUDE)^0.5)/2
-    ).
-    until SHIP:ALTITUDE > turnParameter - 500 or SHIP:APOAPSIS > launch_params["target_altitude"] {
+        (((turnParameter - ship:apoapsis)/turnParameter)^4 + ((turnParameter - ship:apoapsis)/turnParameter)^0.5) * 90 / 2
+    ) * R(0, 0, 180).
+    until ship:apoapsis > turnParameter - 500 or ship:apoapsis > launch_params["target_altitude"] {
         if launch_params["maintain_twr"] <> 0 {
             if ship:availableThrust <> 0 {
-                set twrScale to launch_params["maintain_twr"] / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / (BODY:RADIUS + SHIP:ALTITUDE) ^ 2)).
+                set twrScale to launch_params["maintain_twr"] / (ship:availablethrust / (ship:mass * constant:g0)).
             }
             else {
                 set twrScale to 1.
@@ -45,44 +44,36 @@ function gravityTurn {
         }
     }
 
-    lock STEERING to  HEADING(launch_params["target_heading"]:call(), 0).
-    until SHIP:APOAPSIS > launch_params["target_altitude"] {
-        if launch_params["maintain_twr"] <> 0 {
-            if ship:availableThrust <> 0 {
-                set twrScale to launch_params["maintain_twr"] / (SHIP:AVAILABLETHRUST / (SHIP:MASS * BODY:MU / (BODY:RADIUS + SHIP:ALTITUDE) ^ 2)).
-            }
-            else {
-                set twrScale to 1.
-            }
-        }
-    }
+    lock steering to  heading(launch_params["target_heading"]:call(), 5) * R(0, 0, 180).
+    set twrScale to 1.
+    wait until ship:apoapsis > launch_params["target_altitude"].
     
-    lock THROTTLE to 0.
+    lock throttle to 0.
 }
 
 function atmosphereExit {
-    lock STEERING to SHIP:VELOCITY:SURFACE.
-    wait until SHIP:ALTITUDE > BODY:ATM:HEIGHT.
+    lock steering to lookdirup(surfaceTangent(), -localVertical()).
+    wait until ship:altitude > body:atm:height.
 }
 
 function circularize {
-    local currentOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS/2 + SHIP:PERIAPSIS/2))).
-    local targetOrbitSpeed is sqrt(BODY:MU * (2/(BODY:RADIUS + SHIP:APOAPSIS) - 1/(BODY:RADIUS + SHIP:APOAPSIS))).
+    local currentOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + ship:apoapsis/2 + ship:periapsis/2))).
+    local targetOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + ship:apoapsis))).
     local deltaV is targetOrbitSpeed - currentOrbitSpeed.
     local burnTime is getBurnTime(deltaV).
     print "Delta V: " + deltaV.
     print "Burn Time: " + burnTime.
     
-    lock STEERING to orbitTangent().
-    wait ETA:APOAPSIS - getBurnTime(deltaV/2) - 15.
+    lock steering to lookdirup(orbitTangent(), -localVertical()).
+    wait eta:apoapsis - getBurnTime(deltaV/2) - 15.
     kuniverse:timewarp:cancelWarp().
     wait 15.
-    lock THROTTLE to 1.
+    lock throttle to 1.
     wait burnTime.
-    lock THROTTLE to 0.
+    lock throttle to 0.
     wait 2.
-    unlock THROTTLE.
-    unlock STEERING.
+    unlock throttle.
+    unlock steering.
 }
 
 function launch {
@@ -102,16 +93,24 @@ function launch {
     local launch_complete is false.
 
     local last_maxthrust is 0.
+    local last_stage is stage:number.
+
     when ship:maxthrustat(0) <> last_maxthrust and stage:number > 0 and stageControl then {
-        wait until stage:ready.
-        stage.
-        wait until stage:ready.
-        set last_maxthrust to ship:maxthrustat(0).
-        if launch_complete or stage:number = 0 {
-            return false.
+        if stage:number = last_stage {
+            wait until stage:ready.
+            stage.
+            wait until stage:ready.
+            set last_maxthrust to ship:maxthrustat(0).
+            set last_stage to stage:number.
+            if launch_complete or stage:number = 0 {
+                return false.
+            }
+            else {
+                return true.
+            }
         }
         else {
-            return true.
+            set last_maxthrust to ship:maxthrustat(0).
         }
     }
 
@@ -124,6 +123,7 @@ function launch {
         STAGE.
         wait until stage:ready.
         set last_maxthrust to ship:maxthrustat(0).
+        set last_stage to stage:number.
         set stageControl to true.
     }
 
