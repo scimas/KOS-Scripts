@@ -266,8 +266,8 @@ function azimuth {
         set head to 180 - head.
     }
     local vOrbit is sqrt(body:mu / (orbit_alt + body:radius)).
-    local vRotX is vOrbit * sin(head) - vdot(ship:velocity:orbit, heading(90, 0):vector).
-    local vRotY is vOrbit * cos(head) - vdot(ship:velocity:orbit, heading(0, 0):vector).
+    local vRotX is vOrbit * sin(head) - min(vdot(ship:velocity:orbit, heading(90, 0):vector), vOrbit).
+    local vRotY is vOrbit * cos(head) - min(vdot(ship:velocity:orbit, heading(0, 0):vector), vOrbit).
     set head to 90 - arctan2(vRotY, vRotX).
     return mod(head + 360, 360).
 }
