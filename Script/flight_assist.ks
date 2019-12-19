@@ -24,9 +24,9 @@ local rollPID is pidloop(
 set rollPID:setpoint to 0.
 
 local pitchPID is pidloop(
-    0.005,
-    0.0016,
+    0.008,
     0.001,
+    0.002,
     -1,
     1
 ).
@@ -36,15 +36,15 @@ local accelerationPID is pidloop(
     0.5,
     0.005,
     0.03,
-    -30,
-    30
+    -10,
+    10
 ).
 set accelerationPID:setpoint to 0.
 
 local throttlePID is pidloop(
     0.1,
-    0.005,
-    0.03,
+    0.008,
+    0.01,
     0.01,
     0.99
 ).
