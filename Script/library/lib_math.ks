@@ -17,7 +17,13 @@ function RK4 {
     // Initial time ("t0": t0)
     // Number of steps ("nsteps": nsteps)
     // Returns a list of the final values of the variables
-    parameter sim_init is lexicon().
+    parameter sim_init is lexicon(
+        "t0", 0,
+        "step", 1,
+        "init", list(),
+        "nsteps", 1,
+        "derivatives", { return 0. }
+    ).
 
     local t0 is sim_init["t0"].
     local step is sim_init["step"].
@@ -26,12 +32,12 @@ function RK4 {
     local v is sim_init["init"].
     local num_variables is v:length.
     local midpoint is v:copy.
-    local k1 is 0.
-    local k2 is 0.
-    local k3 is 0.
-    local k4 is 0.
+    local k1 is list().
+    local k2 is list().
+    local k3 is list().
+    local k4 is list().
 
-    for _i in range(sim_init["nsteps"]) {
+    for _ in range(sim_init["nsteps"]) {
         set k1 to sim_init["derivatives"]:call(t0, v).
         for i in range(num_variables) {
             set midpoint[i] to v[i] + k1[i] * halfstep.
