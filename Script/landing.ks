@@ -1,12 +1,12 @@
 @lazyglobal off.
-parameter end_altitude is 20, sim_throttle is 0.8.
+parameter end_altitude is 2, sim_throttle is 0.8.
 
 local restore_ipu is config:ipu.
 set config:ipu to 1000.
 
 clearscreen.
-runoncepath("/library/lib_math.ks").
-runoncepath("/library/lib_navigation.ks").
+runoncepath("library/lib_math.ks").
+runoncepath("library/lib_navigation.ks").
 
 local quit is false.
 on AG10 {
