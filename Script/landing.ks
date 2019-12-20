@@ -62,6 +62,7 @@ print "Simulation time:       s" at (col, line).
 
 until agl:call() < end_altitude or quit {
     set result to list(-body:position, ship:velocity:surface, ship:mass).
+    set sim_params["init"] to result.
     local ti is time:seconds.
     local tf is getBurnTime(result[1]:mag, isp) / sim_throttle.
     local dV is result[1] + g(body:position:normalized * body:radius) * tf.
@@ -87,6 +88,7 @@ local thr is 0.
 lock throttle to sim_throttle + thr.
 until ship:velocity:surface:mag < 3 or quit {
     set result to list(-body:position, ship:velocity:surface, ship:mass).
+    set sim_params["init"] to result.
     local ti is time:seconds.
     local tf is getBurnTime(result[1]:mag, isp) / sim_throttle.
     local dV is result[1] + g(body:position:normalized * body:radius) * tf.
