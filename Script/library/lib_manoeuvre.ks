@@ -2,20 +2,21 @@
 
 function execute {
     parameter coastTime.
-    parameter burnStartTime.
     parameter burnTime.
 
+    wait nextnode:eta - coastTime.
     lock steering to nextnode:deltaV.
-    wait until time:seconds > coastTime.
-    kuniverse:timewarp:cancelwarp.
-    wait until time:seconds > burnStartTime - 0.1.
+    kuniverse:timewarp:cancelwarp().
+    wait nextnode:eta.
+    kuniverse:timewarp:cancelwarp().
     
     lock throttle to 1.
-    wait until time:seconds > burnStartTime + burnTime - 1.
+    wait burnTime - 1.
     lock steering to ship:facing.
     wait 1.
-    
     lock throttle to 0.
+
+    wait 1.
     unlock steering.
     unlock throttle.
 }
