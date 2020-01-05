@@ -37,14 +37,6 @@ function derivs {
 }
 
 local result is list(-body:position, ship:velocity:surface, ship:mass).
-clearvecdraws().
-local prediction is vecdraw().
-set prediction:start to V(0, 0, 0).
-set prediction:vec to V(0, 0, 0).
-set prediction:color to rgb(1, 0, 0).
-set prediction:show to true.
-set prediction:width to 2.
-
 local sim_params is lexicon().
 set sim_params["derivatives"] to derivs@.
 set sim_params["nsteps"] to 10.
@@ -70,8 +62,6 @@ until agl:call() < end_altitude or quit {
     set sim_params["step"] to (tf - ti) / sim_params["nsteps"].
     set sim_params["t0"] to ti.
     set result to RK4(sim_params).
-    set prediction:start to result[0] * 1.005 + body:position.
-    set prediction:vec to result[0] + body:position.
     set line to 0.
     set col to 14.
     print round(tf - ti, 1) at (col, line).
@@ -96,8 +86,6 @@ until ship:velocity:surface:mag < 3 or quit {
     set sim_params["step"] to (tf - ti) / sim_params["nsteps"].
     set sim_params["t0"] to ti.
     set result to RK4(sim_params).
-    set prediction:start to result[0] * 1.005 + body:position.
-    set prediction:vec to result[0] + body:position.
     set line to 0.
     set col to 14.
     print round(tf - ti, 1) at (col, line).
@@ -113,7 +101,6 @@ until ship:velocity:surface:mag < 3 or quit {
 local dir is srfretrograde.
 local head is modulo(compassHeading() - 180, 360).
 set thr to 0.
-set prediction:width to 0.2.
 if not quit {
     lock throttle to thr.    
     lock steering to dir.
@@ -139,5 +126,4 @@ if not quit {
 }
 unlock steering.
 unlock throttle.
-clearvecdraws().
 set config:ipu to restore_ipu.
