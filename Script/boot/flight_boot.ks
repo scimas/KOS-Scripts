@@ -22,7 +22,7 @@ if not(exists("/library")) {
 copyPath("0:/library/lib_navigation.ks", "library/").
 copyPath("0:/flight_assist.ks", "").
 
-print "Flight Assist system ready for activation.".
+runpath("1:/flight_assist.ks").
 // print "Enter waypoint name (or 0)".
 // local wpname is "".
 // until false {
