@@ -59,3 +59,35 @@ function RK4 {
     }
     return v.
 }
+
+function false_position {
+    parameter root_function, xl, xu, tolerance is 0.1, xr is (xl + xu) / 2, max_iter is 10.
+
+    local ea is tolerance + 1.
+    local iter is 0.
+    until false {
+        set iter to iter + 1.
+        local fl is root_function:call(xl).
+        local fu is root_function:call(xu).
+        local xr_old is xr.
+        set xr to xu - (fu * (xu - xl)) / (fu -fl).
+        local fr is root_function:call(xr).
+        if xr <> 0 {
+            set ea to abs((xr - xr_old) / xr).
+        }
+        local condition is fl * fr.
+        if condition < 0 {
+            set xu to xr.
+        }
+        else if condition > 0 {
+            set xl to xr.
+        }
+        else {
+            set ea to 0.
+        }
+        if ea < tolerance or iter >= max_iter {
+            break.
+        }
+    }
+    return xr.
+}
