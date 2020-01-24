@@ -4,16 +4,20 @@ function execute {
     parameter coastTime.
     parameter burnTime.
 
-    wait nextnode:eta - coastTime.
+    local current_time is time:seconds.
+    local adjustment_time is current_time + nextnode:eta - coastTime.
+    wait until time:seconds > adjustment_time.
     lock steering to nextnode:deltaV.
     kuniverse:timewarp:cancelwarp().
     wait nextnode:eta.
+    local guidance_end is time:seconds + burnTime * 0.99.
+    local burn_end is time:seconds + burnTime.
     kuniverse:timewarp:cancelwarp().
     
     lock throttle to 1.
-    wait burnTime - 1.
+    wait until time:seconds > guidance_end.
     lock steering to ship:facing.
-    wait 1.
+    wait until time:seconds > burn_end.
     lock throttle to 0.
 
     wait 1.
