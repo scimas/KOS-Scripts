@@ -98,32 +98,28 @@ until ship:velocity:surface:mag < 3 or quit {
     set thr to throttlePID:update(time:seconds, agl:call() - end_altitude).
 }
 
-local dir is srfretrograde.
+local dir is up.
 local head is modulo(compassHeading() - 180, 360).
 set thr to 0.
 if not quit {
     lock throttle to thr.    
     lock steering to dir.
 }
+wait until ship:verticalspeed < -1.
 until ship:status = "LANDED" or quit {
-    if ship:verticalspeed > 0 {
-        set dir to srfprograde.
-        set thr to 0.
-    }
-    else if ship:verticalspeed < -1.5 or ship:groundspeed > 1.5 {
-        set dir to srfretrograde.
-        set thr to 0.3.
-    }
-    else {
-        set dir to heading(head, 85).
-        set thr to ship:mass * g():mag / ship:availablethrust.
-    }
+    set dir to heading(head, 88).
+    set thr to ship:mass * g():mag / ship:availablethrust.
 }
 if not quit {
     set thr to 0.
-    set dir to heading(head, 90).
+    local landspot is ship:geoposition:position.
+    local east_ref is body:geopositionof(landspot + heading(90, 0):vector):position.
+    local north_ref is body:geopositionof(landspot + heading(0, 0):vector):position.
+    local slopevec is vcrs(north_ref - landspot, east_ref - landspot).
+    set dir to lookdirup(slopevec, ship:facing:topvector).
     wait 10.
 }
 unlock steering.
 unlock throttle.
+sas on.
 set config:ipu to restore_ipu.
