@@ -30,8 +30,8 @@ function gravityTurn {
     local turnParameter is body:atm:height.
     lock steering to heading(
         launch_params["target_heading"]:call(),
-        (((turnParameter - ship:apoapsis)/turnParameter)^4 + ((turnParameter - ship:apoapsis)/turnParameter)^0.5) * 90 / 2
-    ) * R(0, 0, 180).
+        ((1 - ship:apoapsis / turnParameter) ^ 12 + (1 - ship:apoapsis / turnParameter) ^ 0.5) * 90 / 2
+    ).
     until ship:apoapsis > turnParameter - 500 or ship:apoapsis > launch_params["target_altitude"] {
         if launch_params["maintain_twr"] <> 0 {
             if ship:availableThrust <> 0 {
@@ -41,9 +41,10 @@ function gravityTurn {
                 set twrScale to 1.
             }
         }
+        wait 0.
     }
 
-    lock steering to  heading(launch_params["target_heading"]:call(), 5) * R(0, 0, 180).
+    lock steering to  heading(launch_params["target_heading"]:call(), 5).
     set twrScale to 1.
     wait until ship:apoapsis > launch_params["target_altitude"].
     
@@ -94,7 +95,7 @@ function launch {
     local last_maxthrust is 0.
     local last_stage is stage:number.
 
-    when ship:maxthrustat(0) <> last_maxthrust and stage:number > 0 and stageControl then {
+    when (ship:maxthrustat(0) <> last_maxthrust or ship:maxthrustat(0) = 0) and stage:number > 0 and stageControl then {
         if stage:number = last_stage {
             wait until stage:ready.
             stage.
