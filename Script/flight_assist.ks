@@ -25,7 +25,7 @@ set rollPID:setpoint to 0.
 
 local pitchPID is pidloop(
     0.008,
-    0.001,
+    0.002,
     0.002,
     -1,
     1
@@ -310,6 +310,9 @@ until quit {
             set accelerationPID:setpoint to 0.
             set throttle_change:text to "0".
         }
+        else if change = " " {
+            stage.
+        }
         else if change = "g" {
             toggle GEAR.
         }
@@ -330,6 +333,18 @@ until quit {
         }
         else if change = "0" {
             toggle AG10.
+        }
+        else if change = "1" {
+            toggle AG1.
+        }
+        else if change = "2" {
+            toggle AG2.
+        }
+        else if change = "3" {
+            toggle AG3.
+        }
+        else if change = "4" {
+            toggle AG4.
         }
     }
     set pitch_value:text to round(ship:verticalspeed):tostring().
