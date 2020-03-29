@@ -34,8 +34,9 @@ function gravityTurn {
     ).
     until ship:apoapsis > turnParameter - 500 or ship:apoapsis > launch_params["target_altitude"] {
         if launch_params["maintain_twr"] <> 0 {
-            if ship:availableThrust <> 0 {
-                set twrScale to launch_params["maintain_twr"] / (ship:availablethrust / (ship:mass * constant:g0)).
+            local availthrust is ship:availableThrust.
+            if availthrust <> 0 {
+                set twrScale to launch_params["maintain_twr"] / (availthrust / (ship:mass * constant:g0)).
             }
             else {
                 set twrScale to 1.
