@@ -9,14 +9,15 @@ function execute {
     wait until time:seconds > adjustment_time.
     lock steering to nextnode:deltaV.
     kuniverse:timewarp:cancelwarp().
-    wait nextnode:eta.
-    local guidance_end is time:seconds + burnTime * 0.99.
-    local burn_end is time:seconds + burnTime.
+    local tick1 is time:seconds.
+    wait 0.
+    local tick2 is time:seconds.
+    local phys_delta is tick2 - tick1.
+    wait nextnode:eta - phys_delta.
+    local burn_end is time:seconds + burnTime - phys_delta.
     kuniverse:timewarp:cancelwarp().
     
     lock throttle to 1.
-    wait until time:seconds > guidance_end.
-    lock steering to ship:facing.
     wait until time:seconds > burn_end.
     lock throttle to 0.
 
