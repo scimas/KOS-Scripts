@@ -54,8 +54,14 @@ function pitchProgram {
 }
 
 function atmosphereExit {
+    parameter staging_events.
     lock steering to lookdirup(surfaceTangent(), -localVertical()).
     wait until ship:altitude > body:atm:height.
+    from { local i is 0. } until i >= staging_events step { set i to i + 1. } do {
+        stage.
+        wait until stage:ready.
+    }
+    wait 1.
 }
 
 function circularize {
@@ -83,6 +89,7 @@ function launch {
     parameter targetInclination is ship:latitude.
     parameter turnStartSpeed is 60.
     parameter maintainTWR is 0.
+    parameter staging_events is 0.
     
     local launch_params is lexicon(
         "target_altitude", targetAltitude,
@@ -138,7 +145,7 @@ function launch {
     print "Gravity turn complete".
 
     print "Coasting to atmosphere exit, if it exists".
-    atmosphereExit().
+    atmosphereExit(staging_events).
     print "Out of atmosphere".
 
     print "Waiting for circularization burn".
