@@ -65,21 +65,41 @@ function atmosphereExit {
 }
 
 function circularize {
+    local targetperi is ship:apoapsis.
     local currentOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + ship:apoapsis/2 + ship:periapsis/2))).
-    local targetOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + ship:apoapsis))).
+    local targetOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + targetperi))).
     local deltaV is targetOrbitSpeed - currentOrbitSpeed.
     local burnTime is getBurnTime(deltaV).
+    local firsthalfburntime is burntime - getBurnTime(deltaV/2).
     print "Delta V: " + deltaV.
-    print "Burn Time: " + burnTime.
-    
+    print "First Half-burn time: " + firsthalfburntime.
+    print "Burn time: " + burnTime.
     lock steering to lookdirup(orbitTangent(), -localVertical()).
-    wait eta:apoapsis - getBurnTime(deltaV/2) - 15.
-    kuniverse:timewarp:cancelWarp().
-    wait 15.
-    lock throttle to 1.
-    wait burnTime.
-    lock throttle to 0.
-    wait 2.
+    local thr is 0.
+    lock throttle to thr.
+    on AG10 {
+        set thr to 0.
+        wait 0.
+        stage.
+        wait 0.
+        wait until stage:ready.
+        set currentOrbitSpeed to sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + ship:apoapsis/2 + ship:periapsis/2))).
+        set deltaV to targetOrbitSpeed - currentOrbitSpeed.
+        set burnTime to getBurnTime(deltaV).
+        set firsthalfburntime to burntime - getBurnTime(deltaV/2).
+        set burnstart to time:seconds.
+        return true.
+    }
+    print "Waiting for: " + (eta:apoapsis - firsthalfburntime - 15) + "s".
+    wait eta:apoapsis - firsthalfburntime - 15.
+    kuniverse:timewarp:cancelwarp().
+    wait eta:apoapsis - firsthalfburntime.
+    local burnstart is time:seconds.
+    until time:seconds > burnstart + burnTime {
+        set thr to 1.
+        wait 0.
+    }
+    set thr to 0.
     unlock throttle.
     unlock steering.
 }
