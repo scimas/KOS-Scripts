@@ -7,18 +7,30 @@ function orbitTangent {
     return ves:velocity:orbit:normalized.
 }
 
-// In the direction of orbital angular momentum of ves
-function orbitBinormal {
-    parameter ves is ship.
-
-    return vcrs(ves:position - ves:body:position, orbitTangent(ves)):normalized.
-}
-
-// Perpendicular to both tangent and binormal, typically radially inward
+// Normalized acceleration vector, typically corresponds to radial-in
 function orbitNormal {
     parameter ves is ship.
 
-    return vcrs(orbitBinormal(ves), orbitTangent(ves)):normalized.
+    local g is ves:body:mu / ves:body:position:sqrmagnitude * ves:body:position:normalized.
+    local thrust_vec is V(0, 0, 0).
+    // TODO: change ves:loaded to ves:unpacked in case reading engine properties
+    // needs unpacked vessels.
+    if kuniverse:activevessel() = ves and ves:loaded {
+        list engines in eng_list.
+        for e in eng_list {
+            if e:ignition {
+                set thrust_vec to thrust_vec + e:thrust * e:facing:vector.
+            }
+        }
+    }
+    return (g + thrust_vec):normalized.
+}
+
+// Forms left handed orthogonal reference frame with orbitTangent and orbitNormal
+function orbitBinormal {
+    parameter ves is ship.
+
+    return vcrs(orbitTangent(ves), orbitNormal(ves)).
 }
 
 // Vector pointing in the direction of longitude of ascending node
