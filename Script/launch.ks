@@ -17,7 +17,7 @@ function verticalAscent {
     wait until ship:velocity:surface:mag > launch_params["turn_start_speed"].
 }
 
-function gravityTurn {
+function pitchProgram {
     parameter launch_params is lexicon(
         "target_altitude", 80_000,
         "target_heading", { return 90. },
@@ -134,7 +134,7 @@ function launch {
     print "Vertical ascent complete".
 
     print "Starting gravity turn".
-    gravityTurn(launch_params).
+    pitchProgram(launch_params).
     print "Gravity turn complete".
 
     print "Coasting to atmosphere exit, if it exists".
