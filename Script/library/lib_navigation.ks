@@ -15,7 +15,7 @@ function orbitNormal {
     local thrust_vec is V(0, 0, 0).
     // TODO: change ves:loaded to ves:unpacked in case reading engine properties
     // needs unpacked vessels.
-    if kuniverse:activevessel() = ves and ves:loaded {
+    if (kuniverse:activevessel() = ves and throttle <> 0) or ves:loaded {
         list engines in eng_list.
         for e in eng_list {
             if e:ignition {
