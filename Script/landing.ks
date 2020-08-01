@@ -27,10 +27,11 @@ function derivs {
     parameter t, rv.
     
     local dr is rv[1].
+    local thrust_vec is choose V(0, 0, 0) if rv[1]:mag < 1 
+    else ship:availablethrust * sim_throttle / rv[2] * rv[1]:normalized.
     local dv is g(-rv[0]) -
     vcrs(body:angularvel, vcrs(body:angularvel, rv[0])) -
-    2 * vcrs(body:angularvel, rv[1]) -
-    ship:availablethrust*sim_throttle / rv[2] * rv[1]:normalized.
+    2 * vcrs(body:angularvel, rv[1]) - thrust_vec.
     local dm is -ship:availablethrust*sim_throttle / isp.
 
     return list(dr, dv, dm).
