@@ -11,10 +11,31 @@ function orbitTangent {
 function orbitNormal {
     parameter ves is ship.
 
+    if ves:istype("Body") {
+        return _bodyOrbitNormal(ves).
+    } else if ves:istype("Vessel") {
+        return _vesselOrbitNormal(ves).
+    } else {
+        print "Invalid argument for orbit normal, must be a vessel or a body".
+        return 0 / 0.
+    }
+}
+
+function _bodyOrbitNormal {
+    parameter bodyvar.
+
+    local bodypos is bodyvar:position - bodyvar:body:position.
+    return -bodyvar:body:mu / bodypos:sqrmagnitude * bodypos:normalized.
+}
+
+function _vesselOrbitNormal {
+    parameter ves.
+
     local g is ves:body:mu / ves:body:position:sqrmagnitude * ves:body:position:normalized.
     local thrust_vec is V(0, 0, 0).
     // TODO: change ves:loaded to ves:unpacked in case reading engine properties
     // needs unpacked vessels.
+    local eng_list is list().
     if (kuniverse:activevessel() = ves and throttle <> 0) or ves:loaded {
         list engines in eng_list.
         for e in eng_list {
