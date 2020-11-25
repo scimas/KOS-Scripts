@@ -6,6 +6,24 @@ runOncePath("library/lib_manoeuvre.ks").
 runOncePath("library/lib_navigation.ks").
 runOncePath("library/lib_utilities.ks").
 
+function getTurnParameter {
+    parameter target_altitude.
+
+    local turnParameter is target_altitude.
+    if body:atm:exists {
+        local extra_height is log10(body:atm:height / 1000) * 10_000.
+        if target_altitude > body:atm:height + extra_height {
+            set turnParameter to body:atm:height + extra_height.
+        } else {
+            set turnParameter to target_altitude.
+        }
+    } else if target_altitude > 20_000 {
+        set turnParameter to 20_000.
+    }
+
+    return turnParameter.
+}
+
 function verticalAscent {
     parameter launch_params is lexicon(
         "turn_start_speed", 80
@@ -21,19 +39,26 @@ function pitchProgram {
     parameter launch_params is lexicon(
         "target_altitude", 80_000,
         "target_heading", { return 90. },
-        "maintain_twr", 0
+        "maintain_twr", 0,
+        "steepness", 0.5
     ).
 
     local twrScale is 1.
     lock throttle to min(twrScale, 1).
     
-    local turnParameter is body:atm:height.
+    local turn_parameter is getTurnParameter(launch_params["target_altitude"]).
+
+    // Initial kick
+    local tick is time:seconds.
+    lock steering to heading(launch_params["target_heading"]:call(), 90 - (time:seconds - tick), 0). wait 5.
+
     lock steering to heading(
         launch_params["target_heading"]:call(),
-        ((1 - ship:apoapsis / turnParameter) ^ 10 + (1 - ship:apoapsis / turnParameter) ^ 0.8) * 90 / 2,
-        180
+        // ((1 - ship:apoapsis / turnParameter) ^ 10 + (1 - ship:apoapsis / turnParameter) ^ 0.8) * 90 / 2,
+        90 - min(90 * (ship:apoapsis / turn_parameter) ^ launch_params["steepness"], 2 + vang(localVertical(), surfaceTangent())),
+        0
     ).
-    until ship:apoapsis > turnParameter - 500 or ship:apoapsis > launch_params["target_altitude"] {
+    until ship:apoapsis > turn_parameter - 50 {
         if launch_params["maintain_twr"] <> 0 {
             local availthrust is ship:availableThrust.
             if availthrust <> 0 {
@@ -45,17 +70,25 @@ function pitchProgram {
         }
         wait 0.
     }
-
-    lock steering to  heading(launch_params["target_heading"]:call(), 2, 180).
-    set twrScale to 1.
-    wait until ship:apoapsis > launch_params["target_altitude"].
     
+    // lock steering to  heading(launch_params["target_heading"]:call(), 2, 0).
+    // set twrScale to 1.
+    // wait until ship:apoapsis > launch_params["target_altitude"].
+    
+    if body:atm:exists and ship:altitude < body:atm:height {
+        local throttlePID is pidLoop(0.0001, 0, 0.00001, 0.001, 1).
+        until ship:altitude > body:atm:height - 500 {
+            set twrScale to throttlePID:update(time:seconds, ship:apoapsis - turn_parameter).
+            wait 0.
+        }
+    }
+
     lock throttle to 0.
 }
 
 function atmosphereExit {
     parameter staging_events.
-    lock steering to lookdirup(surfaceTangent(), -localVertical()).
+    lock steering to lookdirup(surfaceTangent(), localVertical()).
     wait until ship:altitude > body:atm:height.
     from { local i is 0. } until i >= staging_events step { set i to i + 1. } do {
         stage.
@@ -65,7 +98,10 @@ function atmosphereExit {
 }
 
 function circularize {
-    local targetperi is ship:apoapsis.
+    parameter launch_params is lexicon(
+        "target_altitude", 80_000
+    ).
+    local targetperi is launch_params["target_altitude"].
     local currentOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + ship:apoapsis/2 + ship:periapsis/2))).
     local targetOrbitSpeed is sqrt(body:mu * (2/(body:radius + ship:apoapsis) - 1/(body:radius + targetperi))).
     local deltaV is targetOrbitSpeed - currentOrbitSpeed.
@@ -74,7 +110,7 @@ function circularize {
     print "Delta V: " + deltaV.
     print "First Half-burn time: " + firsthalfburntime.
     print "Burn time: " + burnTime.
-    lock steering to lookdirup(orbitTangent(), -localVertical()).
+    lock steering to lookdirup(orbitTangent(), localVertical()).
     local thr is 0.
     lock throttle to thr.
     on AG10 {
@@ -108,6 +144,7 @@ function launch {
     parameter targetAltitude is 80000.
     parameter targetInclination is ship:latitude.
     parameter turnStartSpeed is 60.
+    parameter steepness is 0.5.
     parameter maintainTWR is 0.
     parameter staging_events is 0.
     
@@ -115,7 +152,8 @@ function launch {
         "target_altitude", targetAltitude,
         "target_inclination", targetInclination,
         "turn_start_speed", turnStartSpeed,
-        "maintain_twr", maintainTWR
+        "maintain_twr", maintainTWR,
+        "steepness", steepness
     ).
 
     local stageControl is false.
@@ -143,14 +181,17 @@ function launch {
         }
     }
 
-    set launch_params["target_heading"] to { return azimuth(launch_params["target_inclination"], launch_params["target_altitude"]). }.
+    local turnParameter is getTurnParameter(launch_params["target_altitude"]).
+    set launch_params["target_heading"] to { return azimuth(launch_params["target_inclination"], turnParameter). }.
     kuniverse:timewarp:cancelWarp().
     print "Launching now".
 
     if SHIP:AVAILABLETHRUST = 0 {
         lock throttle to 1.
-        STAGE.
-        wait until stage:ready.
+        until ship:verticalspeed > 1 {
+            STAGE.
+            wait until stage:ready.
+        }
         set last_maxthrust to ship:maxthrustat(0).
         set last_stage to stage:number.
         set stageControl to true.
@@ -160,16 +201,16 @@ function launch {
     verticalAscent(launch_params).
     print "Vertical ascent complete".
 
-    print "Starting gravity turn".
+    print "Starting pitching manoeuvre".
     pitchProgram(launch_params).
-    print "Gravity turn complete".
+    print "Pitching manoeuvre complete".
 
     print "Coasting to atmosphere exit, if it exists".
     atmosphereExit(staging_events).
     print "Out of atmosphere".
 
     print "Waiting for circularization burn".
-    circularize().
+    circularize(launch_params).
     print "Entered orbit".
 
     set stageControl to false.
