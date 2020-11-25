@@ -3,6 +3,9 @@
 parameter point is 0.
 
 clearscreen.
+set terminal:height to 12.
+set terminal:width to 30.
+
 runOncePath("library/lib_navigation.ks").
 
 local guiding is false.
@@ -10,6 +13,7 @@ local handleThrottle is false.
 local handlePitch is false.
 local handleRoll is false.
 local handleYaw is false.
+local landing is false.
 local quit is false.
 
 local change is 0.
@@ -24,9 +28,9 @@ local rollPID is pidloop(
 set rollPID:setpoint to 0.
 
 local pitchPID is pidloop(
-    0.008,
-    0.002,
-    0.002,
+    0.015,
+    0.001,
+    0.004,
     -1,
     1
 ).
@@ -95,7 +99,9 @@ local waylist is nav_box:addpopupmenu().
 local head_label is nav_box:addlabel("Heading").
 local head_value is nav_box:addlabel("-").
 local distance_value is nav_box:addlabel("-").
-local head_button is nav_box:addbutton("Turn On").
+local nav_buttons is nav_box:addhbox().
+local head_button is nav_buttons:addbutton("Turn On").
+local landing_button is nav_buttons:addbutton("Landing").
 
 set pitch_box:style:width to width/4.
 set pitch_label:style:align to "LEFT".
@@ -195,6 +201,15 @@ function waylist_function {
     parameter wp.
     set point to wp.
 }
+function landing_button_function {
+    if not(landing) {
+        local cur_heading is compassHeading().
+        lock wheelSteering to cur_heading.
+    } else {
+        unlock wheelSteering.
+    }
+    set landing to not(landing).
+}
 set pitch_button:onclick to pitch_button_function@.
 set pitch_update:onclick to pitch_update_function@.
 set roll_button:onclick to roll_button_function@.
@@ -205,6 +220,7 @@ set throttle_button:onclick to throttle_button_function@.
 set throttle_update:onclick to throttle_update_function@.
 set head_button:onclick to head_button_function@.
 set waylist:onchange to waylist_function@.
+set landing_button:onclick to landing_button_function@.
 
 on AG5 {
     head_button_function().
@@ -356,5 +372,6 @@ until quit {
 }
 
 set ship:control:neutralize to true.
+unlock wheelSteering.
 window:hide().
 window:dispose().
