@@ -7,6 +7,18 @@ function modulo {
     return a - abs(n) * floor(a / abs(n)).
 }
 
+function sign {
+    parameter num.
+
+    if num < 0 {
+        return -1.
+    } else if num > 0 {
+        return 1.
+    } else {
+        return 0.
+    }
+}
+
 // Classic 4th Order Runge Kutta System of ODEs solver
 // Initial time ("t0": t0)
 // Step size ("step": step)
@@ -48,41 +60,6 @@ function RK4 {
         }
         set t0 to t0 + halfstep.
         set k4 to derivatives:call(t0, midpoint).
-        for i in range(num_variables) {
-            set v[i] to v[i] + (k1[i] + 2 * (k2[i] + k3[i]) + k4[i]) * sixthstep.
-        }
-    }
-    return v.
-}
-
-    local t0 is sim_init["t0"].
-    local step is sim_init["step"].
-    local halfstep is step/2.
-    local sixthstep is step/6.
-    local v is sim_init["init"].
-    local num_variables is v:length.
-    local midpoint is v:copy.
-    local k1 is list().
-    local k2 is list().
-    local k3 is list().
-    local k4 is list().
-
-    for _ in range(sim_init["nsteps"]) {
-        set k1 to sim_init["derivatives"]:call(t0, v).
-        for i in range(num_variables) {
-            set midpoint[i] to v[i] + k1[i] * halfstep.
-        }
-        set t0 to t0 + halfstep.
-        set k2 to sim_init["derivatives"]:call(t0, midpoint).
-        for i in range(num_variables) {
-            set midpoint[i] to v[i] + k2[i] * halfstep.
-        }
-        set k3 to sim_init["derivatives"]:call(t0, midpoint).
-        for i in range(num_variables) {
-            set midpoint[i] to v[i] + k3[i] * step.
-        }
-        set t0 to t0 + halfstep.
-        set k4 to sim_init["derivatives"]:call(t0, midpoint).
         for i in range(num_variables) {
             set v[i] to v[i] + (k1[i] + 2 * (k2[i] + k3[i]) + k4[i]) * sixthstep.
         }
