@@ -45,7 +45,7 @@ function RK4 {
 }
 
 function RK4_step {
-    parameter t0.
+    parameter ti.
     parameter Δt.
     parameter init.
     parameter derivatives.
@@ -56,7 +56,7 @@ function RK4_step {
     local b43 is 1.
     local c1 is 1/6. local c2 is 1/3. local c3 is 1/3. local c4 is 1/6.
 
-    local t is t0.
+    local t is ti.
     local v is init.
     local num_variables is v:length.
     local midpoint is v:copy.
@@ -69,17 +69,17 @@ function RK4_step {
     for i in range(num_variables) {
         set midpoint[i] to v[i] + b21 * k1[i] * Δt.
     }
-    set t to t0 + a2 * Δt.
+    set t to ti + a2 * Δt.
     set k2 to derivatives:call(t, midpoint).
     for i in range(num_variables) {
         set midpoint[i] to v[i] + b32 * k2[i] * Δt.
     }
-    set t to t0 + a3 * Δt.
+    set t to ti + a3 * Δt.
     set k3 to derivatives:call(t, midpoint).
     for i in range(num_variables) {
         set midpoint[i] to v[i] + b43 * k3[i] * Δt.
     }
-    set t to t0 + a4 * Δt.
+    set t to ti + a4 * Δt.
     set k4 to derivatives:call(t, midpoint).
     for i in range(num_variables) {
         set v[i] to v[i] + (
