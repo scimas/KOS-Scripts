@@ -20,22 +20,43 @@ function sign {
 }
 
 // Classic 4th Order Runge Kutta System of ODEs solver
-// Initial time ("t0": t0)
-// Step size ("step": step)
-// Number of steps ("nsteps": nsteps)
-// Initial values ("init": list[x0, y0, z0, ...])
-// "derivatives": deriv(t, list[x, y, z, ...])@
+// Initial time: ti
+// Final time: tf
+// Step size: step
+// Initial values: init: list[x0, y0, z0, ...]
+// Derivatives deligate: deriv(t, list[x, y, z, ...])@
 // Derivative function must accept each variable
 // Returns a list of the final values of the variables
 function RK4 {
+    parameter ti.
+    parameter tf.
+    parameter step.
+    parameter init.
+    parameter derivatives.
+
+    local t is ti.
+    local v is init.
+    until t = tf {
+        if t + step > tf {
+            set step to tf - t.
+        }
+        set v to RK4_step(t, step, v, derivatives).
+    }
+}
+
+function RK4_step {
     parameter t0.
     parameter step.
-    parameter nsteps.
     parameter init.
     parameter derivatives.
     
-    local halfstep is step/2.
-    local sixthstep is step/6.
+    local a2 is 0.5. local a3 is 0.5. local a4 is 1.
+    local b21 is 0.5.
+    local b32 is 0.5.
+    local b43 is 1.
+    local c1 is 1/6. local c2 is 1/3. local c3 is 1/3. local c4 is 1/6.
+
+    local t is t0.
     local v is init.
     local num_variables is v:length.
     local midpoint is v:copy.
@@ -44,25 +65,29 @@ function RK4 {
     local k3 is list().
     local k4 is list().
 
-    for _ in range(nsteps) {
-        set k1 to derivatives:call(t0, v).
-        for i in range(num_variables) {
-            set midpoint[i] to v[i] + k1[i] * halfstep.
-        }
-        set t0 to t0 + halfstep.
-        set k2 to derivatives:call(t0, midpoint).
-        for i in range(num_variables) {
-            set midpoint[i] to v[i] + k2[i] * halfstep.
-        }
-        set k3 to derivatives:call(t0, midpoint).
-        for i in range(num_variables) {
-            set midpoint[i] to v[i] + k3[i] * step.
-        }
-        set t0 to t0 + halfstep.
-        set k4 to derivatives:call(t0, midpoint).
-        for i in range(num_variables) {
-            set v[i] to v[i] + (k1[i] + 2 * (k2[i] + k3[i]) + k4[i]) * sixthstep.
-        }
+    set k1 to derivatives:call(t, v).
+    for i in range(num_variables) {
+        set midpoint[i] to v[i] + b21 * k1[i] * step.
+    }
+    set t to t0 + a2 * step.
+    set k2 to derivatives:call(t, midpoint).
+    for i in range(num_variables) {
+        set midpoint[i] to v[i] + b32 * k2[i] * step.
+    }
+    set t to t0 + a3 * step.
+    set k3 to derivatives:call(t, midpoint).
+    for i in range(num_variables) {
+        set midpoint[i] to v[i] + b43 * k3[i] * step.
+    }
+    set t to t0 + a4 * step.
+    set k4 to derivatives:call(t, midpoint).
+    for i in range(num_variables) {
+        set v[i] to v[i] + (
+            c1 * k1[i] +
+            c2 * k2[i] +
+            c3 * k3[i] +
+            c4 * k4[i]
+        ) * step.
     }
     return v.
 }
