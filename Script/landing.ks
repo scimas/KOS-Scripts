@@ -38,7 +38,6 @@ function derivs {
 }
 
 local result is list(-body:position, ship:velocity:surface, ship:mass).
-local step is 1.0.
 local nsteps is 10.
 lock steering to srfretrograde.
 local offset is ship:bounds:size:mag.
@@ -58,8 +57,7 @@ until agl:call() < end_altitude or quit {
     local tf is getBurnTime(result[1]:mag, isp) / sim_throttle.
     local dV is result[1] + g(body:position:normalized * body:radius) * tf.
     set tf to ti + getBurnTime(dV:mag, isp) / sim_throttle.
-    set step to (tf - ti) / nsteps.
-    set result to RK4(ti, step, nsteps, result, derivs@).
+    set result to RK4(ti, tf, (tf - ti) / nsteps, result, derivs@).
     set line to 0.
     set col to 14.
     print round(tf - ti, 1) at (col, line).
@@ -80,8 +78,7 @@ until ship:velocity:surface:mag < 3 or quit {
     local tf is getBurnTime(result[1]:mag, isp) / sim_throttle.
     local dV is result[1] + g(body:position:normalized * body:radius) * tf.
     set tf to ti + getBurnTime(dV:mag, isp) / sim_throttle.
-    set step to (tf - ti) / nsteps.
-    set result to RK4(ti, step, nsteps, result, derivs@).
+    set result to RK4(ti, tf, (tf - ti) / nsteps, result, derivs@).
     set line to 0.
     set col to 14.
     print round(tf - ti, 1) at (col, line).
