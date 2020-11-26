@@ -22,7 +22,7 @@ function sign {
 // Classic 4th Order Runge Kutta System of ODEs solver
 // Initial time: ti
 // Final time: tf
-// Step size: step
+// Step size: Δt
 // Initial values: init: list[x0, y0, z0, ...]
 // Derivatives deligate: deriv(t, list[x, y, z, ...])@
 // Derivative function must accept each variable
@@ -30,23 +30,23 @@ function sign {
 function RK4 {
     parameter ti.
     parameter tf.
-    parameter step.
+    parameter Δt.
     parameter init.
     parameter derivatives.
 
     local t is ti.
     local v is init.
     until t = tf {
-        if t + step > tf {
-            set step to tf - t.
+        if t + Δt > tf {
+            set Δt to tf - t.
         }
-        set v to RK4_step(t, step, v, derivatives).
+        set v to RK4_step(t, Δt, v, derivatives).
     }
 }
 
 function RK4_step {
     parameter t0.
-    parameter step.
+    parameter Δt.
     parameter init.
     parameter derivatives.
     
@@ -64,22 +64,22 @@ function RK4_step {
     local k2 is list().
     local k3 is list().
     local k4 is list().
-
+    
     set k1 to derivatives:call(t, v).
     for i in range(num_variables) {
-        set midpoint[i] to v[i] + b21 * k1[i] * step.
+        set midpoint[i] to v[i] + b21 * k1[i] * Δt.
     }
-    set t to t0 + a2 * step.
+    set t to t0 + a2 * Δt.
     set k2 to derivatives:call(t, midpoint).
     for i in range(num_variables) {
-        set midpoint[i] to v[i] + b32 * k2[i] * step.
+        set midpoint[i] to v[i] + b32 * k2[i] * Δt.
     }
-    set t to t0 + a3 * step.
+    set t to t0 + a3 * Δt.
     set k3 to derivatives:call(t, midpoint).
     for i in range(num_variables) {
-        set midpoint[i] to v[i] + b43 * k3[i] * step.
+        set midpoint[i] to v[i] + b43 * k3[i] * Δt.
     }
-    set t to t0 + a4 * step.
+    set t to t0 + a4 * Δt.
     set k4 to derivatives:call(t, midpoint).
     for i in range(num_variables) {
         set v[i] to v[i] + (
@@ -87,7 +87,7 @@ function RK4_step {
             c2 * k2[i] +
             c3 * k3[i] +
             c4 * k4[i]
-        ) * step.
+        ) * Δt.
     }
     return v.
 }
