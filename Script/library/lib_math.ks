@@ -41,6 +41,7 @@ function RK4 {
             set Δt to tf - t.
         }
         set v to RK4_step(t, Δt, v, derivatives).
+        set t to t + Δt.
     }
 }
 
