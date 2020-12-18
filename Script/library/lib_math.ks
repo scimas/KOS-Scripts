@@ -53,6 +53,8 @@ function RK4 {
         set v to RK4_step(t, Δt, v, derivatives).
         set t to t + Δt.
     }
+    
+    return v.
 }
 
 function RK4_step {
