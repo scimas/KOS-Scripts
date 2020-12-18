@@ -6,22 +6,39 @@ runOncePath("library/lib_manoeuvre.ks").
 runOncePath("library/lib_navigation.ks").
 runOncePath("library/lib_utilities.ks").
 
-function getTurnParameter {
+function have_empty_tanks {
+    local stage_parts is ship:partstagged("stage on empty").
+    local result is false.
+    for p in stage_parts {
+        if p:mass = p:drymass {
+            set result to true.
+            break.
+        }
+    }
+    return result.
+}
+
+function getTurnParameters {
     parameter target_altitude.
 
-    local turnParameter is target_altitude.
+    local altParameter is target_altitude.
     if body:atm:exists {
-        local extra_height is log10(body:atm:height / 1000) * 10_000.
+        // Formula derived using this
+        // 70_000  80_000   Kerbin
+        // 140_000 200_000  Earth
+        local extra_height is (5 * body:atm:height - 280_000) / 7.
         if target_altitude > body:atm:height + extra_height {
-            set turnParameter to body:atm:height + extra_height.
-        } else {
-            set turnParameter to target_altitude.
+            set altParameter to body:atm:height + extra_height.
         }
     } else if target_altitude > 20_000 {
-        set turnParameter to 20_000.
+        set altParameter to 20_000.
     }
 
-    return turnParameter.
+    local velParameter is sqrt(body:mu / (body:radius + altParameter)).
+    return lexicon(
+        "altParameter", altParameter,
+        "velParameter", velParameter
+    ).
 }
 
 function verticalAscent {
@@ -46,7 +63,17 @@ function pitchProgram {
     local twrScale is 1.
     lock throttle to min(twrScale, 1).
     
-    local turn_parameter is getTurnParameter(launch_params["target_altitude"]).
+    local turn_parameters is getTurnParameters(launch_params["target_altitude"]).
+    local altParameter is turn_parameters["altParameter"].
+    local velParameter is turn_parameters["velParameter"].
+
+    function altPitch {
+        return ship:apoapsis / altParameter.
+    }
+
+    function velPitch {
+        return vxcl(up:vector, ship:velocity:orbit):mag / velParameter.
+    }
 
     // Initial kick
     local tick is time:seconds.
@@ -54,11 +81,10 @@ function pitchProgram {
 
     lock steering to heading(
         launch_params["target_heading"]:call(),
-        // ((1 - ship:apoapsis / turnParameter) ^ 10 + (1 - ship:apoapsis / turnParameter) ^ 0.8) * 90 / 2,
-        90 - min(90 * (ship:apoapsis / turn_parameter) ^ launch_params["steepness"], 2 + vang(localVertical(), surfaceTangent())),
+        90 - min(90 * ((altPitch() + velPitch()) / 2) ^ launch_params["steepness"], 2 + vang(localVertical(), surfaceTangent())),
         0
     ).
-    until ship:apoapsis > turn_parameter - 50 {
+    until ship:apoapsis > altParameter {
         if launch_params["maintain_twr"] <> 0 {
             local availthrust is ship:availableThrust.
             if availthrust <> 0 {
@@ -70,28 +96,33 @@ function pitchProgram {
         }
         wait 0.
     }
-    
-    // lock steering to  heading(launch_params["target_heading"]:call(), 2, 0).
-    // set twrScale to 1.
-    // wait until ship:apoapsis > launch_params["target_altitude"].
-    
+    local throttle_pid is PIDLoop(0.05, 0, 0.01, 0, 1).
+    set throttle_pid:setpoint to 120.
+    until ship:velocity:orbit:mag > velParameter - 1000 {
+        set twrScale to throttle_pid:update(time:seconds, eta:apoapsis).
+        wait 0.
+    }
+
     if body:atm:exists and ship:altitude < body:atm:height {
         local throttlePID is pidLoop(0.0001, 0, 0.00001, 0.001, 1).
         until ship:altitude > body:atm:height - 500 {
-            set twrScale to throttlePID:update(time:seconds, ship:apoapsis - turn_parameter).
+            set twrScale to throttlePID:update(time:seconds, ship:apoapsis - altParameter).
             wait 0.
         }
     }
 
     lock throttle to 0.
+    wait 0.
 }
 
 function atmosphereExit {
-    parameter staging_events.
     lock steering to lookdirup(surfaceTangent(), localVertical()).
     wait until ship:altitude > body:atm:height.
-    from { local i is 0. } until i >= staging_events step { set i to i + 1. } do {
+    local discard_parts is ship:partstagged("discard").
+    until discard_parts:length = 0 {
         stage.
+        wait until stage:ready.
+        set discard_parts to ship:partstagged("discard").
         wait until stage:ready.
     }
     wait 1.
@@ -113,6 +144,7 @@ function circularize {
     lock steering to lookdirup(orbitTangent(), localVertical()).
     local thr is 0.
     lock throttle to thr.
+    local burnstart is 0.
     on AG10 {
         set thr to 0.
         wait 0.
@@ -130,8 +162,8 @@ function circularize {
     wait eta:apoapsis - firsthalfburntime - 15.
     kuniverse:timewarp:cancelwarp().
     wait eta:apoapsis - firsthalfburntime.
-    local burnstart is time:seconds.
-    until time:seconds > burnstart + burnTime {
+    set burnstart to time:seconds.
+    until time:seconds > burnstart + burnTime and ship:periapsis > targetperi {
         set thr to 1.
         wait 0.
     }
@@ -146,7 +178,6 @@ function launch {
     parameter turnStartSpeed is 60.
     parameter steepness is 0.5.
     parameter maintainTWR is 0.
-    parameter staging_events is 0.
     
     local launch_params is lexicon(
         "target_altitude", targetAltitude,
@@ -162,33 +193,38 @@ function launch {
     local last_maxthrust is 0.
     local last_stage is stage:number.
 
-    when (ship:maxthrustat(0) <> last_maxthrust or ship:maxthrustat(0) = 0) and stage:number > 0 and stageControl then {
-        if stage:number = last_stage {
-            wait until stage:ready.
-            stage.
-            wait until stage:ready.
-            set last_maxthrust to ship:maxthrustat(0).
-            set last_stage to stage:number.
-            if launch_complete or stage:number = 0 {
-                return false.
+    on time:second {
+        if ((ship:maxthrustat(0) <> last_maxthrust or ship:maxthrustat(0) = 0) or
+            have_empty_tanks()) and stage:number > 0 and stageControl {
+            if stage:number = last_stage {
+                wait until stage:ready.
+                stage.
+                wait until stage:ready.
+                set last_maxthrust to ship:maxthrustat(0).
+                set last_stage to stage:number.
+                if launch_complete or stage:number = 0 {
+                    return false.
+                }
+                else {
+                    return true.
+                }
             }
             else {
+                set last_maxthrust to ship:maxthrustat(0).
                 return true.
             }
         }
-        else {
-            set last_maxthrust to ship:maxthrustat(0).
-        }
+        return true.
     }
 
-    local turnParameter is getTurnParameter(launch_params["target_altitude"]).
-    set launch_params["target_heading"] to { return azimuth(launch_params["target_inclination"], turnParameter). }.
+    local turnParameters is getTurnParameters(launch_params["target_altitude"]).
+    set launch_params["target_heading"] to { return azimuth(launch_params["target_inclination"], turnParameters["altParameter"]). }.
     kuniverse:timewarp:cancelWarp().
     print "Launching now".
 
     if SHIP:AVAILABLETHRUST = 0 {
         lock throttle to 1.
-        until ship:verticalspeed > 1 {
+        until ship:verticalspeed > 0.1 {
             STAGE.
             wait until stage:ready.
         }
@@ -206,7 +242,7 @@ function launch {
     print "Pitching manoeuvre complete".
 
     print "Coasting to atmosphere exit, if it exists".
-    atmosphereExit(staging_events).
+    atmosphereExit().
     print "Out of atmosphere".
 
     print "Waiting for circularization burn".
