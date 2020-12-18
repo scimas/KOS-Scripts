@@ -33,3 +33,43 @@ function execute {
     // Force a tick before any other code
     wait 0.
 }
+
+function mass_execute {
+    parameter adjustment_time, after_burn_mass.
+
+    local coast_time is nextnode:eta - adjustment_time.
+    wait coast_time.
+    kuniverse:timewarp:cancelwarp().
+    local burnvector is nextNode:deltav.
+    lock steering to burnvector.
+    wait adjustment_time.
+
+    local burnEngines is list().
+    list engines in burnEngines.
+    local massBurnRate is 0.
+    for e in burnEngines {
+        if e:ignition {
+            set massBurnRate to massBurnRate + e:availableThrust/(e:ISP * constant:g0).
+        }
+    }
+
+    local throt is 1.
+    lock throttle to throt.
+    local tick is time:seconds.
+    local tock is time:seconds.
+    until ship:mass <= after_burn_mass {
+        set tock to time:seconds.
+        local req_mass_change is ship:mass - after_burn_mass.
+        // Will the next two ticks change more mass than required?
+        if 10 * massBurnRate * (tock - tick) > req_mass_change {
+            // Then reduce throttle so that it will only change a fifth of the required change in one tick.
+            set throt to req_mass_change / massBurnRate / (tock - tick) / 10.
+        } else if hasnode {
+            set burnvector to nextnode:deltav.
+        }
+        set tick to tock.
+        wait 0.
+    }
+    unlock throttle.
+    unlock steering.
+}
