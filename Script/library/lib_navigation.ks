@@ -279,6 +279,17 @@ function getBurnTime {
     return burnTime.
 }
 
+// Expected mass after expending Δv
+function getAfterBurnMass {
+    parameter Δv.
+
+    if Δv:istype("Vector") {
+        set Δv to Δv:mag.
+    }
+    local isp is _avg_isp().
+    return ship:mass * constant:e ^ (-Δv / isp).
+}
+
 // Instantaneous azimuth
 function azimuth {
     parameter inclination.
