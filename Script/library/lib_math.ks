@@ -25,7 +25,7 @@ function sqrmag {
     if v:istype("Scalar") {
         return v * v.
     } else if v:istype("Vector") {
-        return vdot(v, v).
+        return v:sqrmagnitude.
     }
 }
 
