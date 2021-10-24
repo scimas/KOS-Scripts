@@ -19,7 +19,7 @@ function execute {
     local phys_delta is tick2 - tick1.
 
     wait nextnode:eta - phys_delta.
-    kuniverse:timewarp:cancelwarp().    
+    kuniverse:timewarp:cancelwarp().
     lock throttle to 1.
     // Change steering lock one tick before burn end (workaround for Principia
     // deleting manoeuvres)
