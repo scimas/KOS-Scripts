@@ -59,13 +59,17 @@ function mass_execute {
     local tock is time:seconds.
     until ship:mass <= after_burn_mass {
         set tock to time:seconds.
-        local req_mass_change is ship:mass - after_burn_mass.
-        // Will the next two ticks change more mass than required?
-        if 10 * massBurnRate * (tock - tick) > req_mass_change {
-            // Then reduce throttle so that it will only change a fifth of the required change in one tick.
-            set throt to req_mass_change / massBurnRate / (tock - tick) / 10.
-        } else if hasnode {
+        local phy_delta is tock - tick.
+        local req_mass_burn_rate is (ship:mass - after_burn_mass) / phy_delta.
+        // If burning at higher rate than required in one physics tick
+        if massBurnRate > req_mass_burn_rate {
+            // Then reduce throttle so that it will only burn the required fuel in one tick
+            set throt to req_mass_burn_rate / massBurnRate.
+        }
+        if hasnode {
             set burnvector to nextnode:deltav.
+        } else {
+            set burnvector to ship:facing:vector.
         }
         set tick to tock.
         wait 0.
