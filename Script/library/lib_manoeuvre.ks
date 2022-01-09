@@ -37,7 +37,7 @@ function execute {
 function mass_execute {
     parameter adjustment_time, after_burn_mass.
 
-    local coast_time is nextnode:eta - adjustment_time.
+    local coast_time is max(nextnode:eta - adjustment_time, 0).
     wait coast_time.
     kuniverse:timewarp:cancelwarp().
     local burnvector is nextNode:deltav.
@@ -56,7 +56,8 @@ function mass_execute {
     local throt is 1.
     lock throttle to throt.
     local tick is time:seconds.
-    local tock is time:seconds.
+    local tock is tick.
+    wait 0.
     until ship:mass <= after_burn_mass {
         set tock to time:seconds.
         local phy_delta is tock - tick.
