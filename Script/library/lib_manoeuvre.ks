@@ -1,5 +1,8 @@
 @LAZYGLOBAL OFF.
 
+runOncePath("lib_navigation.ks").
+runOncePath("lib_math.ks").
+
 function execute {
     // Extra time before burn start to get the ship pointed at the node
     parameter coastTime.
@@ -71,7 +74,21 @@ function mass_execute {
         if hasnode and abs(node:deltav:mag - nextNode:deltav:mag) < 0.001 {
             set burnvector to nextnode:deltav.
         } else {
-            set burnvector to ship:facing:vector.
+            local tangent is orbitTangent().
+            local tangent_angle is vang(tangent, ship:facing:vector).
+            local normal is orbitNormal().
+            local normal_angle is vang(normal, ship:facing:vector).
+            local binormal is orbitBinormal().
+            local binormal_angle is vang(binormal, ship:facing:vector).
+            if tangent_angle < 0.1 or (180 - tangent_angle) < 0.1 {
+                set burnvector to tangent * sign(vdot(tangent, ship:facing:vector)).
+            } else if normal_angle < 0.1 or (180 - normal_angle) < 0.1 {
+                set burnvector to normal * sign(vdot(normal, ship:facing:vector)).
+            } else if binormal_angle < 0.1 or (180 - binormal_angle) < 0.1 {
+                set burnvector to binormal * sign(vdot(binormal, ship:facing:vector)).
+            } else {
+                set burnvector to ship:facing:vector.
+            }
         }
         set tick to tock.
         wait 0.
