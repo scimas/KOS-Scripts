@@ -1,7 +1,7 @@
 @LAZYGLOBAL OFF.
 
-runOncePath("lib_navigation.ks").
-runOncePath("lib_math.ks").
+runOncePath("library/lib_navigation.ks").
+runOncePath("library/lib_math.ks").
 
 function execute {
     // Extra time before burn start to get the ship pointed at the node
