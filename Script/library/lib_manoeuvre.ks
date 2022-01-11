@@ -40,7 +40,8 @@ function mass_execute {
     local coast_time is max(nextnode:eta - adjustment_time, 0).
     wait coast_time.
     kuniverse:timewarp:cancelwarp().
-    local burnvector is nextNode:deltav.
+    local node is nextNode.
+    local burnvector is node:deltav.
     lock steering to burnvector.
     wait adjustment_time.
 
@@ -67,7 +68,7 @@ function mass_execute {
             // Then reduce throttle so that it will only burn the required fuel in one tick
             set throt to req_mass_burn_rate / massBurnRate.
         }
-        if hasnode {
+        if hasnode and abs(node:deltav:mag - nextNode:deltav:mag) < 0.001 {
             set burnvector to nextnode:deltav.
         } else {
             set burnvector to ship:facing:vector.
